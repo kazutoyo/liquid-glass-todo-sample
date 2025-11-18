@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Folder, ChevronRight, Info, Database, Book, Github } from 'lucide-react-native';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryStats } from '@/hooks/use-categories';
@@ -29,12 +29,12 @@ export default function SettingsScreen() {
             onPress={() => router.push('/categories' as any)}
             activeOpacity={0.7}>
             <View style={styles.settingItemLeft}>
-              <FontAwesome name="folder" size={20} color={colors.tint} />
+              <Folder size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
                 カテゴリ一覧
               </Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color={colors.text + '60'} />
+            <ChevronRight size={16} color={colors.text + '60'} />
           </TouchableOpacity>
 
           {/* カテゴリ統計 */}
@@ -79,7 +79,7 @@ export default function SettingsScreen() {
               { backgroundColor: colors.text + '05', borderColor: colors.text + '20' },
             ]}>
             <View style={styles.settingItemLeft}>
-              <FontAwesome name="info-circle" size={20} color={colors.tint} />
+              <Info size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
                 バージョン
               </Text>
@@ -95,7 +95,7 @@ export default function SettingsScreen() {
               { backgroundColor: colors.text + '05', borderColor: colors.text + '20' },
             ]}>
             <View style={styles.settingItemLeft}>
-              <FontAwesome name="database" size={20} color={colors.tint} />
+              <Database size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
                 データベース
               </Text>
@@ -119,12 +119,12 @@ export default function SettingsScreen() {
             ]}
             activeOpacity={0.7}>
             <View style={styles.settingItemLeft}>
-              <FontAwesome name="book" size={20} color={colors.tint} />
+              <Book size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
                 使い方
               </Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color={colors.text + '60'} />
+            <ChevronRight size={16} color={colors.text + '60'} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -134,12 +134,12 @@ export default function SettingsScreen() {
             ]}
             activeOpacity={0.7}>
             <View style={styles.settingItemLeft}>
-              <FontAwesome name="github" size={20} color={colors.tint} />
+              <Github size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
                 ソースコード
               </Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color={colors.text + '60'} />
+            <ChevronRight size={16} color={colors.text + '60'} />
           </TouchableOpacity>
         </View>
       </ScrollView>

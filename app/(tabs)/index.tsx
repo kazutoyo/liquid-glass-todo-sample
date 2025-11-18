@@ -1,20 +1,28 @@
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useTodos, useTodoStats } from '@/hooks/use-todos';
-import { TodoCard } from '@/components/TodoCard';
-import { SectionHeader } from '@/components/SectionHeader';
-import { DevTools } from '@/components/DevTools';
-import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
-import type { Todo } from '@/types/todo';
+import { DevTools } from "@/components/DevTools";
+import { SectionHeader } from "@/components/SectionHeader";
+import { TodoCard } from "@/components/TodoCard";
+import { useColorScheme } from "@/components/useColorScheme";
+import Colors from "@/constants/Colors";
+import { useTodos, useTodoStats } from "@/hooks/use-todos";
+import type { Todo } from "@/types/todo";
+import { GlassView } from "expo-glass-effect";
+import { useRouter } from "expo-router";
+import { Inbox, Plus } from "lucide-react-native";
+import { useMemo, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? "light"];
   const [refreshing, setRefreshing] = useState(false);
 
   // すべてのTODO（親のみ）を取得
@@ -42,7 +50,7 @@ export default function HomeScreen() {
 
     return allTodos
       .filter((todo) => {
-        if (todo.status === 'completed' || !todo.dueDate) return false;
+        if (todo.status === "completed" || !todo.dueDate) return false;
         const dueDate = new Date(todo.dueDate);
         return dueDate <= weekLater;
       })
@@ -56,7 +64,7 @@ export default function HomeScreen() {
   // 直近追加されたTODO（未完了、5件）
   const recentTodos = useMemo(() => {
     return allTodos
-      .filter((todo) => todo.status !== 'completed')
+      .filter((todo) => todo.status !== "completed")
       .sort((a, b) => {
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -87,24 +95,28 @@ export default function HomeScreen() {
     try {
       await toggleStatus(todo.id);
     } catch (error) {
-      console.error('Failed to toggle status:', error);
+      console.error("Failed to toggle status:", error);
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }>
+        }
+      >
         {/* ヘッダー */}
         <View style={styles.header}>
           <Text style={[styles.greeting, { color: colors.text }]}>
             こんにちは👋
           </Text>
-          <Text style={[styles.subtitle, { color: colors.text + '80' }]}>
+          <Text style={[styles.subtitle, { color: colors.text + "80" }]}>
             今日も頑張りましょう！
           </Text>
         </View>
@@ -112,53 +124,45 @@ export default function HomeScreen() {
         {/* 統計カード */}
         <View style={styles.statsContainer}>
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: colors.tint + '20' },
-            ]}>
+            style={[styles.statCard, { backgroundColor: colors.tint + "20" }]}
+          >
             <Text style={[styles.statNumber, { color: colors.tint }]}>
               {stats.total}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.text + '80' }]}>
+            <Text style={[styles.statLabel, { color: colors.text + "80" }]}>
               全TODO
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: '#4CAF50' + '20' },
-            ]}>
-            <Text style={[styles.statNumber, { color: '#4CAF50' }]}>
+            style={[styles.statCard, { backgroundColor: "#4CAF50" + "20" }]}
+          >
+            <Text style={[styles.statNumber, { color: "#4CAF50" }]}>
               {stats.completed}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.text + '80' }]}>
+            <Text style={[styles.statLabel, { color: colors.text + "80" }]}>
               完了
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: '#FF9800' + '20' },
-            ]}>
-            <Text style={[styles.statNumber, { color: '#FF9800' }]}>
+            style={[styles.statCard, { backgroundColor: "#FF9800" + "20" }]}
+          >
+            <Text style={[styles.statNumber, { color: "#FF9800" }]}>
               {stats.pending}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.text + '80' }]}>
+            <Text style={[styles.statLabel, { color: colors.text + "80" }]}>
               未完了
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: colors.tint + '20' },
-            ]}>
+            style={[styles.statCard, { backgroundColor: colors.tint + "20" }]}
+          >
             <Text style={[styles.statNumber, { color: colors.tint }]}>
               {Math.round(stats.completionRate)}%
             </Text>
-            <Text style={[styles.statLabel, { color: colors.text + '80' }]}>
+            <Text style={[styles.statLabel, { color: colors.text + "80" }]}>
               達成率
             </Text>
           </View>
@@ -167,10 +171,7 @@ export default function HomeScreen() {
         {/* 今日のTODO */}
         {todayTodos.length > 0 && (
           <View style={styles.section}>
-            <SectionHeader
-              title="今日のTODO"
-              count={todayTodos.length}
-            />
+            <SectionHeader title="今日のTODO" count={todayTodos.length} />
             <View style={styles.todoContainer}>
               {todayTodos.map((todo) => (
                 <TodoCard
@@ -190,7 +191,7 @@ export default function HomeScreen() {
             <SectionHeader
               title="期限が近いTODO"
               count={dueSoonTodos.length}
-              onSeeAll={() => router.push('/(tabs)/todos' as any)}
+              onSeeAll={() => router.push("/(tabs)/todos" as any)}
             />
             <View style={styles.todoContainer}>
               {dueSoonTodos.map((todo) => (
@@ -211,7 +212,7 @@ export default function HomeScreen() {
             <SectionHeader
               title="最近追加したTODO"
               count={recentTodos.length}
-              onSeeAll={() => router.push('/(tabs)/todos' as any)}
+              onSeeAll={() => router.push("/(tabs)/todos" as any)}
             />
             <View style={styles.todoContainer}>
               {recentTodos.map((todo) => (
@@ -227,36 +228,32 @@ export default function HomeScreen() {
         )}
 
         {/* 空状態 */}
-        {!loading &&
-          allTodos.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <FontAwesome
-                name="inbox"
-                size={64}
-                color={colors.text + '40'}
-              />
-              <Text
-                style={[styles.emptyText, { color: colors.text + '60' }]}>
-                TODOがまだありません
-              </Text>
-              <Text
-                style={[
-                  styles.emptySubText,
-                  { color: colors.text + '40' },
-                ]}>
-                右下の「+」ボタンから追加してみましょう
-              </Text>
-            </View>
-          )}
+        {!loading && allTodos.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Inbox size={64} color={colors.text + "40"} />
+            <Text style={[styles.emptyText, { color: colors.text + "60" }]}>
+              TODOがまだありません
+            </Text>
+            <Text style={[styles.emptySubText, { color: colors.text + "40" }]}>
+              右下の「+」ボタンから追加してみましょう
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
-      {/* FAB - TODO追加ボタン */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.tint }]}
-        onPress={() => router.push('/todo/new' as any)}
-        activeOpacity={0.8}>
-        <FontAwesome name="plus" size={24} color="white" />
-      </TouchableOpacity>
+      {/* FAB - TODO追加ボタン（Glass Effect） */}
+      <GlassView
+        style={styles.fab}
+        glassEffectStyle="regular"
+      >
+        <TouchableOpacity
+          style={styles.fabButton}
+          onPress={() => router.push("/todo/new" as any)}
+          activeOpacity={0.8}
+        >
+          <Plus size={24} color={colorScheme === 'dark' ? 'white' : colors.tint} />
+        </TouchableOpacity>
+      </GlassView>
 
       {/* 開発ツール */}
       {__DEV__ && <DevTools />}
@@ -271,20 +268,23 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 90, // FABとTabBarの高さ分の余白
+  },
   header: {
     padding: 20,
     paddingTop: 16,
   },
   greeting: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     gap: 12,
     marginBottom: 8,
@@ -293,11 +293,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   statLabel: {
@@ -310,32 +310,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 64,
     paddingHorizontal: 32,
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptySubText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
-    bottom: 20,
+    bottom: 90, // TabBarの高さ(~50px) + マージン
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    overflow: "hidden", // Glass Effectの境界をクリップ
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -343,5 +342,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+  },
+  fabButton: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

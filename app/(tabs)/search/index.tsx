@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Search, X } from 'lucide-react-native';
 import { useSearchTodos } from '@/hooks/use-todos';
 import { TodoCard } from '@/components/TodoCard';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -93,8 +93,7 @@ export default function SearchScreen() {
                   borderColor: colors.text + '20',
                 },
               ]}>
-              <FontAwesome
-                name="search"
+              <Search
                 size={18}
                 color={colors.text + '60'}
                 style={styles.searchIcon}
@@ -112,8 +111,7 @@ export default function SearchScreen() {
                 <TouchableOpacity
                   onPress={handleClearSearch}
                   style={styles.clearButton}>
-                  <FontAwesome
-                    name="times-circle"
+                  <X
                     size={18}
                     color={colors.text + '60'}
                   />
@@ -151,14 +149,14 @@ export default function SearchScreen() {
             </>
           ) : searchText.trim().length > 0 ? (
             <View style={styles.centerContainer}>
-              <FontAwesome name="search" size={64} color={colors.text + '40'} />
+              <Search size={64} color={colors.text + '40'} />
               <Text style={[styles.emptyText, { color: colors.text + '60' }]}>
                 「{searchText}」に一致するTODOが見つかりませんでした
               </Text>
             </View>
           ) : (
             <View style={styles.centerContainer}>
-              <FontAwesome name="search" size={64} color={colors.text + '40'} />
+              <Search size={64} color={colors.text + '40'} />
               <Text style={[styles.emptyText, { color: colors.text + '60' }]}>
                 {Platform.OS === 'ios'
                   ? '上の検索バーからTODOを検索できます'

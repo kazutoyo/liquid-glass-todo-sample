@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Pencil, Trash2, ArrowLeft, Plus, FolderOpen, Check } from 'lucide-react-native';
 import { useCategories } from '@/hooks/use-categories';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -121,14 +121,14 @@ export default function CategoriesScreen() {
           style={styles.actionButton}
           onPress={() => handleEditCategory(item)}
           activeOpacity={0.7}>
-          <FontAwesome name="edit" size={18} color={colors.tint} />
+          <Pencil size={18} color={colors.tint} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => handleDeleteCategory(item)}
           activeOpacity={0.7}>
-          <FontAwesome name="trash" size={18} color="#F44336" />
+          <Trash2 size={18} color="#F44336" />
         </TouchableOpacity>
       </View>
     </View>
@@ -146,7 +146,7 @@ export default function CategoriesScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
           activeOpacity={0.7}>
-          <FontAwesome name="arrow-left" size={20} color={colors.text} />
+          <ArrowLeft size={20} color={colors.text} />
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: colors.text }]}>
@@ -157,7 +157,7 @@ export default function CategoriesScreen() {
           style={styles.addButton}
           onPress={handleAddCategory}
           activeOpacity={0.7}>
-          <FontAwesome name="plus" size={20} color={colors.tint} />
+          <Plus size={20} color={colors.tint} />
         </TouchableOpacity>
       </View>
 
@@ -169,7 +169,7 @@ export default function CategoriesScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <FontAwesome name="folder-o" size={64} color={colors.text + '40'} />
+            <FolderOpen size={64} color={colors.text + '40'} />
             <Text style={[styles.emptyText, { color: colors.text + '60' }]}>
               カテゴリがまだありません
             </Text>
@@ -252,7 +252,7 @@ export default function CategoriesScreen() {
                     onPress={() => setSelectedColor(color)}
                     activeOpacity={0.7}>
                     {selectedColor === color && (
-                      <FontAwesome name="check" size={20} color="white" />
+                      <Check size={20} color="white" />
                     )}
                   </TouchableOpacity>
                 ))}

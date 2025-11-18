@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronRight } from 'lucide-react-native';
 import { useColorScheme } from './useColorScheme';
 import Colors from '@/constants/Colors';
 
@@ -35,7 +35,7 @@ export function SectionHeader({ title, count, onSeeAll }: SectionHeaderProps) {
           <Text style={[styles.seeAllText, { color: colors.tint }]}>
             すべて表示
           </Text>
-          <FontAwesome name="chevron-right" size={12} color={colors.tint} />
+          <ChevronRight size={16} color={colors.tint} />
         </TouchableOpacity>
       )}
     </View>

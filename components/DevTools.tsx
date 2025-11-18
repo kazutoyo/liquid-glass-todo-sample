@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Wrench, X, Database } from 'lucide-react-native';
 import { seedData } from '@/utils/seed-data';
 import { useColorScheme } from './useColorScheme';
 import Colors from '@/constants/Colors';
@@ -41,7 +41,7 @@ export function DevTools() {
         style={[styles.fab, { backgroundColor: colors.tint }]}
         onPress={() => setIsExpanded(true)}
         activeOpacity={0.8}>
-        <FontAwesome name="wrench" size={20} color="white" />
+        <Wrench size={20} color="white" />
       </TouchableOpacity>
     );
   }
@@ -51,7 +51,7 @@ export function DevTools() {
       <View style={[styles.header, { borderBottomColor: colors.text + '20' }]}>
         <Text style={[styles.title, { color: colors.text }]}>開発ツール</Text>
         <TouchableOpacity onPress={() => setIsExpanded(false)}>
-          <FontAwesome name="times" size={20} color={colors.text} />
+          <X size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -60,7 +60,7 @@ export function DevTools() {
           style={[styles.button, { backgroundColor: colors.tint }]}
           onPress={handleSeedData}
           activeOpacity={0.8}>
-          <FontAwesome name="database" size={18} color="white" />
+          <Database size={18} color="white" />
           <Text style={styles.buttonText}>ダミーデータ挿入</Text>
         </TouchableOpacity>
       </View>

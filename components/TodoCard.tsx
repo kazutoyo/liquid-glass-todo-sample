@@ -1,5 +1,5 @@
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Circle, CircleDot, CheckCircle, Clock } from 'lucide-react-native';
 import type { Todo } from '@/types/todo';
 import { useColorScheme } from './useColorScheme';
 import Colors from '@/constants/Colors';
@@ -16,10 +16,10 @@ const PRIORITY_COLORS = {
   high: '#F44336',
 };
 
-const STATUS_ICONS = {
-  pending: 'circle-o',
-  in_progress: 'adjust',
-  completed: 'check-circle',
+const STATUS_ICON_COMPONENTS = {
+  pending: Circle,
+  in_progress: CircleDot,
+  completed: CheckCircle,
 } as const;
 
 export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
@@ -65,15 +65,19 @@ export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
           onPress={onToggleStatus}
           style={styles.statusButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <FontAwesome
-            name={STATUS_ICONS[todo.status]}
-            size={24}
-            color={
-              todo.status === 'completed'
-                ? PRIORITY_COLORS.low
-                : colors.text + '80'
-            }
-          />
+          {(() => {
+            const IconComponent = STATUS_ICON_COMPONENTS[todo.status];
+            return (
+              <IconComponent
+                size={24}
+                color={
+                  todo.status === 'completed'
+                    ? PRIORITY_COLORS.low
+                    : colors.text + '80'
+                }
+              />
+            );
+          })()}
         </TouchableOpacity>
 
         {/* メイン情報 */}
@@ -124,8 +128,7 @@ export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
             {/* 期限 */}
             {todo.dueDate && (
               <View style={styles.dueDate}>
-                <FontAwesome
-                  name="clock-o"
+                <Clock
                   size={12}
                   color={isOverdue ? PRIORITY_COLORS.high : colors.text + '60'}
                 />

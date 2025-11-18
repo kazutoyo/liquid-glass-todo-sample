@@ -1,13 +1,13 @@
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useState, useMemo } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useTodos } from '@/hooks/use-todos';
 import { TodoList } from '@/components/TodoList';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import type { Todo, TodoStatus, TodoPriority } from '@/types/todo';
+import { useTodos } from '@/hooks/use-todos';
+import type { Todo, TodoPriority } from '@/types/todo';
+import { Plus } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type FilterType = 'all' | 'pending' | 'in_progress' | 'completed';
 type SortType = 'dueDate' | 'priority' | 'createdAt';
@@ -74,13 +74,13 @@ export default function TodosScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* フィルタボタン */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}>
+        contentContainerStyle={styles.sortContainer}>
         <FilterButton
           label="すべて"
           count={getFilterCount('all')}
@@ -159,7 +159,7 @@ export default function TodosScreen() {
         style={[styles.fab, { backgroundColor: colors.tint }]}
         onPress={() => router.push('/todo/new' as any)}
         activeOpacity={0.8}>
-        <FontAwesome name="plus" size={24} color="white" />
+        <Plus size={24} color="white" />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -248,6 +248,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#00000020',
   },
   filterContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,

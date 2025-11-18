@@ -40,7 +40,7 @@ export default function TabLayout() {
         {Platform.select({
           ios: (
             <Icon
-              sf={{ default: "magnifyingglass", selected: "magnifyingglass" }}
+              sf={{ default: 'magnifyingglass', selected: "magnifyingglass" }}
             />
           ),
           android: (

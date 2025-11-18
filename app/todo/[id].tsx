@@ -1,23 +1,22 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { createTodo, deleteTodo, updateTodo } from '@/db';
+import { useCategories } from '@/hooks/use-categories';
+import { useSubTodos, useTodo } from '@/hooks/use-todos';
+import type { CreateTodoInput, TodoPriority, TodoStatus } from '@/types/todo';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { Calendar, CheckCircle, Circle, CircleDot, Trash, XCircle } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
+  Alert,
+  ScrollView,
   StyleSheet,
-  View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert,
-  Platform,
+  View
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useTodo, useSubTodos } from '@/hooks/use-todos';
-import { useCategories } from '@/hooks/use-categories';
-import { updateTodo, createTodo, deleteTodo } from '@/db';
-import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
-import type { TodoPriority, TodoStatus, CreateTodoInput } from '@/types/todo';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PRIORITIES: { value: TodoPriority; label: string; color: string }[] = [
   { value: 'low', label: '低', color: '#4CAF50' },
@@ -25,15 +24,16 @@ const PRIORITIES: { value: TodoPriority; label: string; color: string }[] = [
   { value: 'high', label: '高', color: '#F44336' },
 ];
 
-const STATUSES: { value: TodoStatus; label: string; icon: string }[] = [
-  { value: 'pending', label: '未着手', icon: 'circle-o' },
-  { value: 'in_progress', label: '進行中', icon: 'adjust' },
-  { value: 'completed', label: '完了', icon: 'check-circle' },
+const STATUSES: { value: TodoStatus; label: string; Icon: typeof Circle }[] = [
+  { value: 'pending', label: '未着手', Icon: Circle },
+  { value: 'in_progress', label: '進行中', Icon: CircleDot },
+  { value: 'completed', label: '完了', Icon: CheckCircle },
 ];
 
 export default function TodoDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation()
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -62,6 +62,9 @@ export default function TodoDetailScreen() {
       if (todo.dueDate) {
         setDueDate(new Date(todo.dueDate));
       }
+      navigation.setOptions({
+        title: todo.title,
+      })
     }
   }, [todo, isNew]);
 
@@ -185,36 +188,38 @@ export default function TodoDetailScreen() {
         <View style={styles.section}>
           <Text style={[styles.label, { color: colors.text }]}>ステータス</Text>
           <View style={styles.buttonGroup}>
-            {STATUSES.map((s) => (
-              <TouchableOpacity
-                key={s.value}
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor:
-                      status === s.value ? colors.tint + '20' : colors.text + '10',
-                    borderColor:
-                      status === s.value ? colors.tint : colors.text + '20',
-                  },
-                ]}
-                onPress={() => setStatus(s.value)}
-                activeOpacity={0.7}>
-                <FontAwesome
-                  name={s.icon as any}
-                  size={16}
-                  color={status === s.value ? colors.tint : colors.text + '80'}
-                />
-                <Text
+            {STATUSES.map((s) => {
+              const StatusIcon = s.Icon;
+              return (
+                <TouchableOpacity
+                  key={s.value}
                   style={[
-                    styles.buttonText,
+                    styles.button,
                     {
-                      color: status === s.value ? colors.tint : colors.text + '80',
+                      backgroundColor:
+                        status === s.value ? colors.tint + '20' : colors.text + '10',
+                      borderColor:
+                        status === s.value ? colors.tint : colors.text + '20',
                     },
-                  ]}>
-                  {s.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  ]}
+                  onPress={() => setStatus(s.value)}
+                  activeOpacity={0.7}>
+                  <StatusIcon
+                    size={16}
+                    color={status === s.value ? colors.tint : colors.text + '80'}
+                  />
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      {
+                        color: status === s.value ? colors.tint : colors.text + '80',
+                      },
+                    ]}>
+                    {s.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -334,8 +339,7 @@ export default function TodoDetailScreen() {
             ]}
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.7}>
-            <FontAwesome
-              name="calendar"
+            <Calendar
               size={18}
               color={colors.text + '80'}
             />
@@ -346,8 +350,7 @@ export default function TodoDetailScreen() {
               <TouchableOpacity
                 onPress={() => setDueDate(null)}
                 style={styles.clearDateButton}>
-                <FontAwesome
-                  name="times-circle"
+                <XCircle
                   size={18}
                   color={colors.text + '60'}
                 />
@@ -362,39 +365,37 @@ export default function TodoDetailScreen() {
             <Text style={[styles.label, { color: colors.text }]}>
               サブタスク ({subTodos.length})
             </Text>
-            {subTodos.map((subTodo) => (
-              <View
-                key={subTodo.id}
-                style={[
-                  styles.subTaskItem,
-                  {
-                    backgroundColor: colors.text + '05',
-                    borderColor: colors.text + '20',
-                  },
-                ]}>
-                <FontAwesome
-                  name={
-                    subTodo.status === 'completed'
-                      ? 'check-circle'
-                      : 'circle-o'
-                  }
-                  size={16}
-                  color={
-                    subTodo.status === 'completed'
-                      ? '#4CAF50'
-                      : colors.text + '60'
-                  }
-                />
-                <Text
+            {subTodos.map((subTodo) => {
+              const SubTaskIcon = subTodo.status === 'completed' ? CheckCircle : Circle;
+              return (
+                <View
+                  key={subTodo.id}
                   style={[
-                    styles.subTaskText,
-                    { color: colors.text },
-                    subTodo.status === 'completed' && styles.subTaskCompleted,
+                    styles.subTaskItem,
+                    {
+                      backgroundColor: colors.text + '05',
+                      borderColor: colors.text + '20',
+                    },
                   ]}>
-                  {subTodo.title}
-                </Text>
-              </View>
-            ))}
+                  <SubTaskIcon
+                    size={16}
+                    color={
+                      subTodo.status === 'completed'
+                        ? '#4CAF50'
+                        : colors.text + '60'
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.subTaskText,
+                      { color: colors.text },
+                      subTodo.status === 'completed' && styles.subTaskCompleted,
+                    ]}>
+                    {subTodo.title}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -405,7 +406,7 @@ export default function TodoDetailScreen() {
               style={styles.deleteButton}
               onPress={handleDelete}
               activeOpacity={0.7}>
-              <FontAwesome name="trash" size={18} color="#F44336" />
+              <Trash size={18} color="#F44336" />
               <Text style={styles.deleteButtonText}>TODOを削除</Text>
             </TouchableOpacity>
           </View>
