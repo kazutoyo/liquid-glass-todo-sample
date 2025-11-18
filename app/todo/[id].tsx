@@ -3,9 +3,10 @@ import Colors from '@/constants/Colors';
 import { createTodo, deleteTodo, updateTodo } from '@/db';
 import { useCategories } from '@/hooks/use-categories';
 import { useSubTodos, useTodo } from '@/hooks/use-todos';
+import { useScheduleTodoNotification } from '@/hooks/use-notifications';
 import type { CreateTodoInput, TodoPriority, TodoStatus } from '@/types/todo';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { Calendar, CheckCircle, Circle, CircleDot, Trash, XCircle } from 'lucide-react-native';
+import { Calendar, CheckCircle, Circle, CircleDot, Trash, XCircle, Bell } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,9 +15,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const PRIORITIES: { value: TodoPriority; label: string; color: string }[] = [
   { value: 'low', label: '低', color: '#4CAF50' },
@@ -43,6 +46,7 @@ export default function TodoDetailScreen() {
   const { todo, loading } = useTodo(todoId);
   const { subTodos } = useSubTodos(todoId);
   const { categories } = useCategories();
+  const scheduleNotification = useScheduleTodoNotification();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -51,6 +55,8 @@ export default function TodoDetailScreen() {
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [reminderTime, setReminderTime] = useState<Date | null>(null);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
 
   useEffect(() => {
     if (todo && !isNew) {
@@ -61,6 +67,9 @@ export default function TodoDetailScreen() {
       setCategoryId(todo.categoryId);
       if (todo.dueDate) {
         setDueDate(new Date(todo.dueDate));
+      }
+      if (todo.reminderTime) {
+        setReminderTime(new Date(todo.reminderTime));
       }
       navigation.setOptions({
         title: todo.title,
@@ -87,11 +96,13 @@ export default function TodoDetailScreen() {
         recurringPattern: null,
         parentId: null,
         sortOrder: 0,
-        reminderTime: null,
+        reminderTime: reminderTime ? reminderTime.toISOString() : null,
       };
 
+      let savedTodoId = todoId;
       if (isNew) {
-        await createTodo(todoData);
+        const newTodo = await createTodo(todoData);
+        savedTodoId = newTodo.id;
         Alert.alert('成功', 'TODOを作成しました', [
           { text: 'OK', onPress: () => router.back() },
         ]);
@@ -101,6 +112,9 @@ export default function TodoDetailScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       }
+
+      // 通知をスケジュール
+      await scheduleNotification(savedTodoId, title.trim(), reminderTime);
     } catch (error) {
       console.error('Failed to save todo:', error);
       Alert.alert('エラー', 'TODOの保存に失敗しました');
@@ -359,6 +373,39 @@ export default function TodoDetailScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* リマインダー */}
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.text }]}>リマインダー</Text>
+          <TouchableOpacity
+            style={[
+              styles.dateButton,
+              {
+                backgroundColor: colors.text + '10',
+                borderColor: colors.text + '20',
+              },
+            ]}
+            onPress={() => setShowReminderPicker(true)}
+            activeOpacity={0.7}>
+            <Bell
+              size={18}
+              color={colors.text + '80'}
+            />
+            <Text style={[styles.dateButtonText, { color: colors.text }]}>
+              {reminderTime ? formatDate(reminderTime) : 'リマインダーを設定'}
+            </Text>
+            {reminderTime && (
+              <TouchableOpacity
+                onPress={() => setReminderTime(null)}
+                style={styles.clearDateButton}>
+                <XCircle
+                  size={18}
+                  color={colors.text + '60'}
+                />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        </View>
+
         {/* サブタスク */}
         {!isNew && subTodos.length > 0 && (
           <View style={styles.section}>
@@ -440,8 +487,37 @@ export default function TodoDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* TODO: DateTimePicker（expo-ui）の実装 */}
-      {/* 現時点ではプレースホルダー */}
+      {/* DateTimePicker */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={dueDate || new Date()}
+          mode="datetime"
+          is24Hour={true}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(Platform.OS === 'ios');
+            if (event.type === 'set' && selectedDate) {
+              setDueDate(selectedDate);
+            }
+          }}
+        />
+      )}
+
+      {/* ReminderTimePicker */}
+      {showReminderPicker && (
+        <DateTimePicker
+          value={reminderTime || new Date()}
+          mode="datetime"
+          is24Hour={true}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedDate) => {
+            setShowReminderPicker(Platform.OS === 'ios');
+            if (event.type === 'set' && selectedDate) {
+              setReminderTime(selectedDate);
+            }
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
