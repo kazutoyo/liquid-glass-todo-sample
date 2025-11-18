@@ -1,8 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { createTodo, deleteTodo, updateTodo } from '@/db';
 import { useCategories } from '@/hooks/use-categories';
-import { useSubTodos, useTodo } from '@/hooks/use-todos';
+import { useSubTodos, useTodo, useCreateTodo, useUpdateTodo, useDeleteTodo } from '@/hooks/use-todos';
 import { useScheduleTodoNotification } from '@/hooks/use-notifications';
 import type { CreateTodoInput, TodoPriority, TodoStatus } from '@/types/todo';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
@@ -43,10 +42,15 @@ export default function TodoDetailScreen() {
   const isNew = id === 'new';
   const todoId = isNew ? 0 : parseInt(id || '0', 10);
 
-  const { todo, loading } = useTodo(todoId);
-  const { subTodos } = useSubTodos(todoId);
-  const { categories } = useCategories();
+  const { data: todo, isLoading } = useTodo(isNew ? null : todoId);
+  const { data: subTodos = [] } = useSubTodos(isNew ? null : todoId);
+  const { data: categories = [] } = useCategories();
   const scheduleNotification = useScheduleTodoNotification();
+
+  // ミューテーション
+  const createTodoMutation = useCreateTodo();
+  const updateTodoMutation = useUpdateTodo();
+  const deleteTodoMutation = useDeleteTodo();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,41 +87,49 @@ export default function TodoDetailScreen() {
       return;
     }
 
-    try {
-      const todoData: CreateTodoInput = {
-        title: title.trim(),
-        description: description.trim() || null,
-        priority,
-        status,
-        categoryId,
-        dueDate: dueDate ? dueDate.toISOString() : null,
-        tags: null,
-        isRecurring: false,
-        recurringPattern: null,
-        parentId: null,
-        sortOrder: 0,
-        reminderTime: reminderTime ? reminderTime.toISOString() : null,
-      };
+    const todoData: CreateTodoInput = {
+      title: title.trim(),
+      description: description.trim() || null,
+      priority,
+      status,
+      categoryId,
+      dueDate: dueDate ? dueDate.toISOString() : null,
+      tags: null,
+      isRecurring: false,
+      recurringPattern: null,
+      parentId: null,
+      sortOrder: 0,
+      reminderTime: reminderTime ? reminderTime.toISOString() : null,
+    };
 
-      let savedTodoId = todoId;
-      if (isNew) {
-        const newTodo = await createTodo(todoData);
-        savedTodoId = newTodo.id;
-        Alert.alert('成功', 'TODOを作成しました', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
-      } else {
-        await updateTodo({ id: todoId, ...todoData });
-        Alert.alert('成功', 'TODOを更新しました', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
-      }
-
-      // 通知をスケジュール
-      await scheduleNotification(savedTodoId, title.trim(), reminderTime);
-    } catch (error) {
-      console.error('Failed to save todo:', error);
-      Alert.alert('エラー', 'TODOの保存に失敗しました');
+    if (isNew) {
+      createTodoMutation.mutate(todoData, {
+        onSuccess: async (newTodo) => {
+          // 通知をスケジュール
+          await scheduleNotification(newTodo.id, title.trim(), reminderTime);
+          Alert.alert('成功', 'TODOを作成しました', [
+            { text: 'OK', onPress: () => router.back() },
+          ]);
+        },
+        onError: (error) => {
+          console.error('Failed to create todo:', error);
+          Alert.alert('エラー', 'TODOの作成に失敗しました');
+        },
+      });
+    } else {
+      updateTodoMutation.mutate({ id: todoId, ...todoData }, {
+        onSuccess: async () => {
+          // 通知をスケジュール
+          await scheduleNotification(todoId, title.trim(), reminderTime);
+          Alert.alert('成功', 'TODOを更新しました', [
+            { text: 'OK', onPress: () => router.back() },
+          ]);
+        },
+        onError: (error) => {
+          console.error('Failed to update todo:', error);
+          Alert.alert('エラー', 'TODOの更新に失敗しました');
+        },
+      });
     }
   };
 
@@ -130,14 +142,16 @@ export default function TodoDetailScreen() {
         {
           text: '削除',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteTodo(todoId);
-              router.back();
-            } catch (error) {
-              console.error('Failed to delete todo:', error);
-              Alert.alert('エラー', 'TODOの削除に失敗しました');
-            }
+          onPress: () => {
+            deleteTodoMutation.mutate(todoId, {
+              onSuccess: () => {
+                router.back();
+              },
+              onError: (error) => {
+                console.error('Failed to delete todo:', error);
+                Alert.alert('エラー', 'TODOの削除に失敗しました');
+              },
+            });
           },
         },
       ]

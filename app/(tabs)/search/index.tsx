@@ -12,12 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
 import { Search, X } from 'lucide-react-native';
-import { useSearchTodos } from '@/hooks/use-todos';
+import { useSearchTodos, useToggleTodoStatus } from '@/hooks/use-todos';
 import { TodoCard } from '@/components/TodoCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import type { Todo } from '@/types/todo';
-import { useTodos } from '@/hooks/use-todos';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -25,24 +24,15 @@ export default function SearchScreen() {
   const colors = Colors[colorScheme ?? 'light'];
 
   const [searchText, setSearchText] = useState('');
-  const { results, loading, search } = useSearchTodos();
-  const { toggleStatus } = useTodos({ hasParent: false });
+  const { data: results = [], isLoading } = useSearchTodos(searchText.trim());
+  const toggleStatusMutation = useToggleTodoStatus();
 
   const handleSearchTextChange = useCallback(
     (text: string) => {
       setSearchText(text);
-      if (text.trim()) {
-        search(text.trim());
-      }
     },
-    [search]
+    []
   );
-
-  const handleSearch = () => {
-    if (searchText.trim()) {
-      search(searchText.trim());
-    }
-  };
 
   const handleClearSearch = () => {
     setSearchText('');
@@ -52,16 +42,8 @@ export default function SearchScreen() {
     router.push(`/todo/${todo.id}` as any);
   };
 
-  const handleToggleStatus = async (todo: Todo) => {
-    try {
-      await toggleStatus(todo.id);
-      // 検索結果を再取得
-      if (searchText.trim()) {
-        search(searchText.trim());
-      }
-    } catch (error) {
-      console.error('Failed to toggle status:', error);
-    }
+  const handleToggleStatus = (todo: Todo) => {
+    toggleStatusMutation.mutate(todo.id);
   };
 
   return (
@@ -104,7 +86,6 @@ export default function SearchScreen() {
                 placeholderTextColor={colors.text + '60'}
                 value={searchText}
                 onChangeText={handleSearchTextChange}
-                onSubmitEditing={handleSearch}
                 returnKeyType="search"
               />
               {searchText.length > 0 && (
@@ -125,7 +106,7 @@ export default function SearchScreen() {
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}>
-          {loading ? (
+          {isLoading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={colors.tint} />
             </View>

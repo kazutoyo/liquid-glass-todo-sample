@@ -1,7 +1,7 @@
 import { TodoList } from '@/components/TodoList';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { useTodos } from '@/hooks/use-todos';
+import { useTodos, useToggleTodoStatus } from '@/hooks/use-todos';
 import type { Todo, TodoPriority } from '@/types/todo';
 import { Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -21,7 +21,10 @@ export default function TodosScreen() {
   const [sortType, setSortType] = useState<SortType>('dueDate');
 
   // すべてのTODO（親のみ）を取得
-  const { todos: allTodos, loading, toggleStatus } = useTodos({ hasParent: false });
+  const { data: allTodos = [], isLoading } = useTodos({ hasParent: false });
+
+  // ステータスをトグルするミューテーション
+  const toggleStatusMutation = useToggleTodoStatus();
 
   // フィルタとソートを適用
   const filteredAndSortedTodos = useMemo(() => {
@@ -60,12 +63,8 @@ export default function TodosScreen() {
     router.push(`/todo/${todo.id}` as any);
   };
 
-  const handleToggleStatus = async (todo: Todo) => {
-    try {
-      await toggleStatus(todo.id);
-    } catch (error) {
-      console.error('Failed to toggle status:', error);
-    }
+  const handleToggleStatus = (todo: Todo) => {
+    toggleStatusMutation.mutate(todo.id);
   };
 
   const getFilterCount = (type: FilterType) => {
@@ -144,7 +143,7 @@ export default function TodosScreen() {
       {/* TODO一覧 */}
       <TodoList
         todos={filteredAndSortedTodos}
-        loading={loading}
+        loading={isLoading}
         emptyMessage={
           filterType === 'all'
             ? 'TODOがありません'

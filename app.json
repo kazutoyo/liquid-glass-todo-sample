@@ -39,6 +39,12 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#007AFF"
         }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": true
+        }
       ]
     ],
     "experiments": {

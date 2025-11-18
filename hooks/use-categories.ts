@@ -1,9 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import type {
-  Category,
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from '@/types/todo';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getCategories,
   createCategory,
@@ -12,164 +7,127 @@ import {
   getCategoryById,
   getCategoryStats,
 } from '@/db';
+import type {
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from '@/types/todo';
 
 /**
- * カテゴリ操作用カスタムフック
+ * カテゴリリストを取得するフック
  */
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadCategories = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getCategories();
-      setCategories(data as Category[]);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Failed to load categories')
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
-  const create = useCallback(
-    async (input: CreateCategoryInput) => {
-      try {
-        const newCategory = await createCategory(input);
-        await loadCategories();
-        return newCategory;
-      } catch (err) {
-        throw err instanceof Error
-          ? err
-          : new Error('Failed to create category');
-      }
-    },
-    [loadCategories]
-  );
-
-  const update = useCallback(
-    async (input: UpdateCategoryInput) => {
-      try {
-        const updatedCategory = await updateCategory(input);
-        await loadCategories();
-        return updatedCategory;
-      } catch (err) {
-        throw err instanceof Error
-          ? err
-          : new Error('Failed to update category');
-      }
-    },
-    [loadCategories]
-  );
-
-  const remove = useCallback(
-    async (id: number) => {
-      try {
-        await deleteCategory(id);
-        await loadCategories();
-      } catch (err) {
-        throw err instanceof Error
-          ? err
-          : new Error('Failed to delete category');
-      }
-    },
-    [loadCategories]
-  );
-
-  return {
-    categories,
-    loading,
-    error,
-    refresh: loadCategories,
-    create,
-    update,
-    remove,
-  };
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  });
 }
 
 /**
- * 単一カテゴリ取得用フック
+ * カテゴリ詳細を取得するフック
  */
-export function useCategory(id: number) {
-  const [category, setCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadCategory = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getCategoryById(id);
-      setCategory(data as Category | null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Failed to load category')
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadCategory();
-  }, [loadCategory]);
-
-  return {
-    category,
-    loading,
-    error,
-    refresh: loadCategory,
-  };
+export function useCategory(id: number | null) {
+  return useQuery({
+    queryKey: ['categories', id],
+    queryFn: () => getCategoryById(id!),
+    enabled: id !== null && id > 0,
+  });
 }
 
 /**
- * カテゴリ別統計用フック
+ * カテゴリを作成するフック
+ */
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
+    },
+  });
+}
+
+/**
+ * カテゴリを更新するフック（楽観的更新付き）
+ */
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateCategory,
+    onMutate: async (updatedCategory) => {
+      await queryClient.cancelQueries({ queryKey: ['categories'] });
+
+      const previousCategories = queryClient.getQueryData(['categories']);
+
+      queryClient.setQueryData<any[]>(['categories'], (old) => {
+        if (!old) return old;
+        return old.map((category) =>
+          category.id === updatedCategory.id
+            ? { ...category, ...updatedCategory }
+            : category
+        );
+      });
+
+      queryClient.setQueryData(['categories', updatedCategory.id], (old: any) => {
+        if (!old) return old;
+        return { ...old, ...updatedCategory };
+      });
+
+      return { previousCategories };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousCategories) {
+        queryClient.setQueryData(['categories'], context.previousCategories);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
+    },
+  });
+}
+
+/**
+ * カテゴリを削除するフック
+ */
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteCategory,
+    onMutate: async (categoryId) => {
+      await queryClient.cancelQueries({ queryKey: ['categories'] });
+
+      const previousCategories = queryClient.getQueryData(['categories']);
+
+      queryClient.setQueryData<any[]>(['categories'], (old) => {
+        if (!old) return old;
+        return old.filter((category) => category.id !== categoryId);
+      });
+
+      return { previousCategories };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousCategories) {
+        queryClient.setQueryData(['categories'], context.previousCategories);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+}
+
+/**
+ * カテゴリ別統計を取得するフック
  */
 export function useCategoryStats() {
-  const [stats, setStats] = useState<
-    Array<{
-      categoryId: number | null;
-      categoryName: string;
-      categoryColor: string;
-      total: number;
-      completed: number;
-      pending: number;
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadStats = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getCategoryStats();
-      setStats(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Failed to load category stats')
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-  return {
-    stats,
-    loading,
-    error,
-    refresh: loadStats,
-  };
+  return useQuery({
+    queryKey: ['categoryStats'],
+    queryFn: getCategoryStats,
+  });
 }

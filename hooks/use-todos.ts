@@ -1,275 +1,260 @@
-import { useCallback, useEffect, useState } from 'react';
-import type {
-  Todo,
-  CreateTodoInput,
-  UpdateTodoInput,
-  TodoFilter,
-  TodoSort,
-} from '@/types/todo';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getTodos,
+  getTodoById,
   createTodo,
   updateTodo,
   deleteTodo,
-  getTodoById,
-  searchTodos,
   getSubTodos,
+  searchTodos,
   getTodoStats,
 } from '@/db';
+import type {
+  TodoFilter,
+  TodoSort,
+  CreateTodoInput,
+  UpdateTodoInput,
+  Todo,
+} from '@/types/todo';
 
 /**
- * TODO操作用カスタムフック
+ * TODOリストを取得するフック
  */
 export function useTodos(filter?: TodoFilter, sort?: TodoSort) {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  return useQuery({
+    queryKey: ['todos', filter, sort],
+    queryFn: () => getTodos(filter, sort),
+  });
+}
 
-  // filterとsortを安定した値にするためにJSON.stringify
-  const filterKey = JSON.stringify(filter);
-  const sortKey = JSON.stringify(sort);
+/**
+ * TODO詳細を取得するフック
+ */
+export function useTodo(id: number | null) {
+  return useQuery({
+    queryKey: ['todos', id],
+    queryFn: () => getTodoById(id!),
+    enabled: id !== null && id > 0,
+  });
+}
 
-  const loadTodos = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getTodos(filter, sort);
-      setTodos(data as Todo[]);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load todos'));
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey, sortKey]);
+/**
+ * TODOを作成するフック
+ */
+export function useCreateTodo() {
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadTodos();
-  }, [loadTodos]);
-
-  const create = useCallback(
-    async (input: CreateTodoInput) => {
-      try {
-        const newTodo = await createTodo(input);
-        await loadTodos();
-        return newTodo;
-      } catch (err) {
-        throw err instanceof Error ? err : new Error('Failed to create todo');
-      }
+  return useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => {
+      // 全てのTODOクエリを無効化して再取得
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todoStats'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
     },
-    [loadTodos]
-  );
+  });
+}
 
-  const update = useCallback(
-    async (input: UpdateTodoInput) => {
-      try {
-        const updatedTodo = await updateTodo(input);
-        await loadTodos();
-        return updatedTodo;
-      } catch (err) {
-        throw err instanceof Error ? err : new Error('Failed to update todo');
-      }
-    },
-    [loadTodos]
-  );
+/**
+ * TODOを更新するフック（楽観的更新付き）
+ */
+export function useUpdateTodo() {
+  const queryClient = useQueryClient();
 
-  const remove = useCallback(
-    async (id: number) => {
-      try {
-        await deleteTodo(id);
-        await loadTodos();
-      } catch (err) {
-        throw err instanceof Error ? err : new Error('Failed to delete todo');
-      }
-    },
-    [loadTodos]
-  );
+  return useMutation({
+    mutationFn: updateTodo,
+    onMutate: async (updatedTodo) => {
+      // 進行中のクエリをキャンセル
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
 
-  const toggleStatus = useCallback(
-    async (id: number) => {
-      try {
-        const todo = await getTodoById(id);
-        if (!todo) {
-          throw new Error('Todo not found');
+      // 以前の状態をスナップショット
+      const previousTodos = queryClient.getQueriesData({ queryKey: ['todos'] });
+
+      // 楽観的更新: キャッシュを即座に更新
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['todos'] },
+        (old) => {
+          if (!old) return old;
+          return old.map((todo) =>
+            todo.id === updatedTodo.id ? { ...todo, ...updatedTodo } : todo
+          );
         }
+      );
 
-        let newStatus: Todo['status'];
-        let completedAt: string | null = null;
+      // 個別のTODO詳細も更新
+      queryClient.setQueryData(['todos', updatedTodo.id], (old: any) => {
+        if (!old) return old;
+        return { ...old, ...updatedTodo };
+      });
 
-        if (todo.status === 'completed') {
-          newStatus = 'pending';
-        } else if (todo.status === 'pending') {
-          newStatus = 'in_progress';
-        } else {
-          newStatus = 'completed';
-          completedAt = new Date().toISOString();
-        }
-
-        await updateTodo({
-          id,
-          status: newStatus,
-          completedAt,
+      return { previousTodos };
+    },
+    onError: (_err, _variables, context) => {
+      // エラー時はロールバック
+      if (context?.previousTodos) {
+        context.previousTodos.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
         });
-        await loadTodos();
-      } catch (err) {
-        throw err instanceof Error
-          ? err
-          : new Error('Failed to toggle todo status');
       }
     },
-    [loadTodos]
-  );
-
-  return {
-    todos,
-    loading,
-    error,
-    refresh: loadTodos,
-    create,
-    update,
-    remove,
-    toggleStatus,
-  };
+    onSettled: () => {
+      // 完了後にDBから再取得
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todoStats'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
+    },
+  });
 }
 
 /**
- * 単一TODO取得用フック
+ * TODOを削除するフック
  */
-export function useTodo(id: number) {
-  const [todo, setTodo] = useState<Todo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useDeleteTodo() {
+  const queryClient = useQueryClient();
 
-  const loadTodo = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getTodoById(id);
-      setTodo(data as Todo | null);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load todo'));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  return useMutation({
+    mutationFn: deleteTodo,
+    onMutate: async (todoId) => {
+      // 進行中のクエリをキャンセル
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
 
-  useEffect(() => {
-    loadTodo();
-  }, [loadTodo]);
+      // 以前の状態をスナップショット
+      const previousTodos = queryClient.getQueriesData({ queryKey: ['todos'] });
 
-  return {
-    todo,
-    loading,
-    error,
-    refresh: loadTodo,
-  };
-}
-
-/**
- * TODO検索用フック
- */
-export function useSearchTodos() {
-  const [results, setResults] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const search = useCallback(async (searchTerm: string) => {
-    if (!searchTerm.trim()) {
-      setResults([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await searchTodos(searchTerm);
-      setResults(data as Todo[]);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Failed to search todos')
+      // 楽観的更新: キャッシュから削除
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['todos'] },
+        (old) => {
+          if (!old) return old;
+          return old.filter((todo) => todo.id !== todoId);
+        }
       );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
-  return {
-    results,
-    loading,
-    error,
-    search,
-  };
+      return { previousTodos };
+    },
+    onError: (_err, _variables, context) => {
+      // エラー時はロールバック
+      if (context?.previousTodos) {
+        context.previousTodos.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todoStats'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
+    },
+  });
 }
 
 /**
- * サブタスク取得用フック
+ * TODOステータスをトグルするフック
  */
-export function useSubTodos(parentId: number) {
-  const [subTodos, setSubTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useToggleTodoStatus() {
+  const queryClient = useQueryClient();
 
-  const loadSubTodos = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getSubTodos(parentId);
-      setSubTodos(data as Todo[]);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Failed to load subtodos')
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const todo = await getTodoById(id);
+      if (!todo) {
+        throw new Error('Todo not found');
+      }
+
+      let newStatus: Todo['status'];
+      let completedAt: string | null = null;
+
+      if (todo.status === 'completed') {
+        newStatus = 'pending';
+      } else if (todo.status === 'pending') {
+        newStatus = 'in_progress';
+      } else {
+        newStatus = 'completed';
+        completedAt = new Date().toISOString();
+      }
+
+      return updateTodo({
+        id,
+        status: newStatus,
+        completedAt,
+      });
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+
+      const previousTodos = queryClient.getQueriesData({ queryKey: ['todos'] });
+
+      // 楽観的更新
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['todos'] },
+        (old) => {
+          if (!old) return old;
+          return old.map((todo) => {
+            if (todo.id !== id) return todo;
+
+            let newStatus: Todo['status'];
+            if (todo.status === 'completed') {
+              newStatus = 'pending';
+            } else if (todo.status === 'pending') {
+              newStatus = 'in_progress';
+            } else {
+              newStatus = 'completed';
+            }
+
+            return {
+              ...todo,
+              status: newStatus,
+              completedAt: newStatus === 'completed' ? new Date().toISOString() : null,
+            };
+          });
+        }
       );
-    } finally {
-      setLoading(false);
-    }
-  }, [parentId]);
 
-  useEffect(() => {
-    loadSubTodos();
-  }, [loadSubTodos]);
-
-  return {
-    subTodos,
-    loading,
-    error,
-    refresh: loadSubTodos,
-  };
+      return { previousTodos };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousTodos) {
+        context.previousTodos.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todoStats'] });
+    },
+  });
 }
 
 /**
- * TODO統計用フック
+ * サブタスクを取得するフック
+ */
+export function useSubTodos(parentId: number | null) {
+  return useQuery({
+    queryKey: ['todos', parentId, 'subtasks'],
+    queryFn: () => getSubTodos(parentId!),
+    enabled: parentId !== null,
+  });
+}
+
+/**
+ * 全文検索するフック
+ */
+export function useSearchTodos(searchTerm: string) {
+  return useQuery({
+    queryKey: ['todos', 'search', searchTerm],
+    queryFn: () => searchTodos(searchTerm),
+    enabled: searchTerm.length > 0,
+    staleTime: 5000, // 検索結果は5秒でstaleになる
+  });
+}
+
+/**
+ * TODO統計を取得するフック
  */
 export function useTodoStats() {
-  const [stats, setStats] = useState({
-    total: 0,
-    completed: 0,
-    pending: 0,
-    completionRate: 0,
+  return useQuery({
+    queryKey: ['todoStats'],
+    queryFn: getTodoStats,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const loadStats = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getTodoStats();
-      setStats(data);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load stats'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-  return {
-    stats,
-    loading,
-    error,
-    refresh: loadStats,
-  };
 }

@@ -1,7 +1,3 @@
-import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { openDatabaseSync } from 'expo-sqlite';
-import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
-import * as schema from './schema';
 import type {
   CreateCategoryInput,
   CreateTodoInput,
@@ -10,14 +6,15 @@ import type {
   UpdateCategoryInput,
   UpdateTodoInput,
 } from '@/types/todo';
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import { openDatabaseSync } from 'expo-sqlite';
+import * as schema from './schema';
 
 // データベースを開く
 const expoDb = openDatabaseSync('todos.db', {
-  enableCRSQLite: false,
   enableChangeListener: false,
   useNewConnection: false,
-  // FTS5を有効化
-  enableFTS: true,
 });
 
 export const db = drizzle(expoDb, { schema });

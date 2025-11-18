@@ -12,7 +12,12 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pencil, Trash2, ArrowLeft, Plus, FolderOpen, Check } from 'lucide-react-native';
-import { useCategories } from '@/hooks/use-categories';
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+} from '@/hooks/use-categories';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import type { Category, CreateCategoryInput } from '@/types/todo';
@@ -29,7 +34,10 @@ export default function CategoriesScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { categories, loading, create, update, remove } = useCategories();
+  const { data: categories = [], isLoading } = useCategories();
+  const createCategoryMutation = useCreateCategory();
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
@@ -49,35 +57,48 @@ export default function CategoriesScreen() {
     setShowModal(true);
   };
 
-  const handleSaveCategory = async () => {
+  const handleSaveCategory = () => {
     if (!categoryName.trim()) {
       Alert.alert('エラー', 'カテゴリ名を入力してください');
       return;
     }
 
-    try {
-      if (editingCategory) {
-        await update({
+    if (editingCategory) {
+      updateCategoryMutation.mutate(
+        {
           id: editingCategory.id,
           name: categoryName.trim(),
           color: selectedColor,
           sortOrder: editingCategory.sortOrder,
-        });
-        Alert.alert('成功', 'カテゴリを更新しました');
-      } else {
-        const categoryData: CreateCategoryInput = {
-          name: categoryName.trim(),
-          color: selectedColor,
-          icon: null,
-          sortOrder: categories.length,
-        };
-        await create(categoryData);
-        Alert.alert('成功', 'カテゴリを作成しました');
-      }
-      setShowModal(false);
-    } catch (error) {
-      console.error('Failed to save category:', error);
-      Alert.alert('エラー', 'カテゴリの保存に失敗しました');
+        },
+        {
+          onSuccess: () => {
+            Alert.alert('成功', 'カテゴリを更新しました');
+            setShowModal(false);
+          },
+          onError: (error) => {
+            console.error('Failed to update category:', error);
+            Alert.alert('エラー', 'カテゴリの更新に失敗しました');
+          },
+        }
+      );
+    } else {
+      const categoryData: CreateCategoryInput = {
+        name: categoryName.trim(),
+        color: selectedColor,
+        icon: null,
+        sortOrder: categories.length,
+      };
+      createCategoryMutation.mutate(categoryData, {
+        onSuccess: () => {
+          Alert.alert('成功', 'カテゴリを作成しました');
+          setShowModal(false);
+        },
+        onError: (error) => {
+          console.error('Failed to create category:', error);
+          Alert.alert('エラー', 'カテゴリの作成に失敗しました');
+        },
+      });
     }
   };
 
@@ -90,13 +111,13 @@ export default function CategoriesScreen() {
         {
           text: '削除',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await remove(category.id);
-            } catch (error) {
-              console.error('Failed to delete category:', error);
-              Alert.alert('エラー', 'カテゴリの削除に失敗しました');
-            }
+          onPress: () => {
+            deleteCategoryMutation.mutate(category.id, {
+              onError: (error) => {
+                console.error('Failed to delete category:', error);
+                Alert.alert('エラー', 'カテゴリの削除に失敗しました');
+              },
+            });
           },
         },
       ]

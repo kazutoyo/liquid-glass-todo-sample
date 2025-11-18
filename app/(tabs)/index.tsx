@@ -3,13 +3,14 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { TodoCard } from "@/components/TodoCard";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useTodos, useTodoStats } from "@/hooks/use-todos";
+import { useTodos, useTodoStats, useToggleTodoStatus } from "@/hooks/use-todos";
 import type { Todo } from "@/types/todo";
 import { GlassView } from "expo-glass-effect";
 import { useRouter } from "expo-router";
 import { Inbox, Plus } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
+  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -23,25 +24,15 @@ export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
-  const [refreshing, setRefreshing] = useState(false);
 
   // すべてのTODO（親のみ）を取得
-  const {
-    todos: allTodos,
-    loading,
-    refresh: refreshTodos,
-    toggleStatus,
-  } = useTodos({ hasParent: false });
+  const { data: allTodos = [], isLoading, refetch: refetchTodos } = useTodos({ hasParent: false });
 
   // 統計情報を取得
-  const { stats, refresh: refreshStats } = useTodoStats();
+  const { data: stats = { total: 0, completed: 0, pending: 0, completionRate: 0 }, refetch: refetchStats } = useTodoStats();
 
-  // リフレッシュ処理
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await Promise.all([refreshTodos(), refreshStats()]);
-    setRefreshing(false);
-  };
+  // ステータスをトグルするミューテーション
+  const toggleStatusMutation = useToggleTodoStatus();
 
   // 期限が近いTODO（未完了、7日以内）
   const dueSoonTodos = useMemo(() => {
@@ -91,12 +82,13 @@ export default function HomeScreen() {
     router.push(`/todo/${todo.id}` as any);
   };
 
-  const handleToggleStatus = async (todo: Todo) => {
-    try {
-      await toggleStatus(todo.id);
-    } catch (error) {
-      console.error("Failed to toggle status:", error);
-    }
+  const handleToggleStatus = (todo: Todo) => {
+    toggleStatusMutation.mutate(todo.id);
+  };
+
+  // リフレッシュ処理
+  const handleRefresh = async () => {
+    await Promise.all([refetchTodos(), refetchStats()]);
   };
 
   return (
@@ -108,7 +100,10 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+          />
         }
       >
         {/* ヘッダー */}
@@ -228,7 +223,7 @@ export default function HomeScreen() {
         )}
 
         {/* 空状態 */}
-        {!loading && allTodos.length === 0 && (
+        {!isLoading && allTodos.length === 0 && (
           <View style={styles.emptyContainer}>
             <Inbox size={64} color={colors.text + "40"} />
             <Text style={[styles.emptyText, { color: colors.text + "60" }]}>
