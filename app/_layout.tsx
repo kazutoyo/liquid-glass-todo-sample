@@ -1,15 +1,21 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
-import * as Notifications from 'expo-notifications';
-import { Stack, useRouter } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
+import * as Notifications from "expo-notifications";
+import { Stack, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/components/useColorScheme';
-import { initDatabase } from '@/db';
-import { useNotificationPermission } from '@/hooks/use-notifications';
+import { useColorScheme } from "@/components/useColorScheme";
+import { initDatabase } from "@/db";
+import { useNotificationPermission } from "@/hooks/use-notifications";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
+import { Platform } from "react-native";
 
 // 通知の表示設定
 Notifications.setNotificationHandler({
@@ -25,11 +31,11 @@ Notifications.setNotificationHandler({
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary
-} from 'expo-router';
+} from "expo-router";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: "(tabs)",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -39,7 +45,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30000, // 30秒間はキャッシュを使用
+      staleTime: 1000 * 60, // 1分間はキャッシュを使用（パフォーマンス向上）
       gcTime: 1000 * 60 * 5, // 5分間キャッシュを保持
       retry: 1, // エラー時1回リトライ
       refetchOnWindowFocus: true, // ウィンドウフォーカス時に再取得
@@ -49,7 +55,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -66,7 +72,7 @@ export default function RootLayout() {
   // Initialize database
   useEffect(() => {
     initDatabase().catch((err) => {
-      console.error('Failed to initialize database:', err);
+      console.error("Failed to initialize database:", err);
     });
   }, []);
 
@@ -103,11 +109,40 @@ function RootLayoutNav() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="todo/[id]" options={{ headerBackButtonDisplayMode: 'minimal', presentation: 'formSheet', sheetAllowedDetents: [0.7, 1.0] }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="todo/[id]"
+          options={{
+            headerBackButtonDisplayMode: "minimal",
+            headerTransparent: Platform.OS === "ios",
+            headerLargeTitle: false,
+            presentation:
+              Platform.OS === "ios" && isLiquidGlassAvailable()
+                ? "formSheet"
+                : "modal",
+            sheetGrabberVisible: true,
+            sheetAllowedDetents: [0.8, 1.0],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: isLiquidGlassAvailable()
+                ? "transparent"
+                : undefined,
+            },
+            headerStyle: {
+              backgroundColor: isLiquidGlassAvailable()
+                ? "transparent"
+                : undefined,
+            },
+          }}
+        />
+        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );

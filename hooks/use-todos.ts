@@ -70,11 +70,12 @@ export function useUpdateTodo() {
       // 以前の状態をスナップショット
       const previousTodos = queryClient.getQueriesData({ queryKey: ['todos'] });
 
-      // 楽観的更新: キャッシュを即座に更新
+      // 楽観的更新: TODOリストクエリのみを更新（配列のクエリ）
       queryClient.setQueriesData<any[]>(
         { queryKey: ['todos'] },
         (old) => {
-          if (!old) return old;
+          // oldが配列でない場合はスキップ（個別TODO取得クエリなど）
+          if (!old || !Array.isArray(old)) return old;
           return old.map((todo) =>
             todo.id === updatedTodo.id ? { ...todo, ...updatedTodo } : todo
           );
@@ -97,9 +98,12 @@ export function useUpdateTodo() {
         });
       }
     },
-    onSettled: () => {
-      // 完了後にDBから再取得
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    onSuccess: () => {
+      // 成功時にDBから再取得（即座に反映）
+      queryClient.invalidateQueries({
+        queryKey: ['todos'],
+        refetchType: 'active', // アクティブなクエリのみ再取得
+      });
       queryClient.invalidateQueries({ queryKey: ['todoStats'] });
       queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
     },
@@ -125,7 +129,8 @@ export function useDeleteTodo() {
       queryClient.setQueriesData<any[]>(
         { queryKey: ['todos'] },
         (old) => {
-          if (!old) return old;
+          // oldが配列でない場合はスキップ
+          if (!old || !Array.isArray(old)) return old;
           return old.filter((todo) => todo.id !== todoId);
         }
       );
@@ -141,7 +146,11 @@ export function useDeleteTodo() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      // 成功時にDBから再取得（即座に反映）
+      queryClient.invalidateQueries({
+        queryKey: ['todos'],
+        refetchType: 'active',
+      });
       queryClient.invalidateQueries({ queryKey: ['todoStats'] });
       queryClient.invalidateQueries({ queryKey: ['categoryStats'] });
     },
@@ -188,7 +197,8 @@ export function useToggleTodoStatus() {
       queryClient.setQueriesData<any[]>(
         { queryKey: ['todos'] },
         (old) => {
-          if (!old) return old;
+          // oldが配列でない場合はスキップ
+          if (!old || !Array.isArray(old)) return old;
           return old.map((todo) => {
             if (todo.id !== id) return todo;
 
@@ -219,8 +229,12 @@ export function useToggleTodoStatus() {
         });
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    onSuccess: () => {
+      // 成功時にDBから再取得（即座に反映）
+      queryClient.invalidateQueries({
+        queryKey: ['todos'],
+        refetchType: 'active',
+      });
       queryClient.invalidateQueries({ queryKey: ['todoStats'] });
     },
   });

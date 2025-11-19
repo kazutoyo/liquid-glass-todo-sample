@@ -1,16 +1,15 @@
-import { DevTools } from "@/components/DevTools";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TodoCard } from "@/components/TodoCard";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { useTodos, useTodoStats, useToggleTodoStatus } from "@/hooks/use-todos";
 import type { Todo } from "@/types/todo";
+import { useHeaderHeight } from '@react-navigation/elements';
 import { GlassView } from "expo-glass-effect";
 import { useRouter } from "expo-router";
 import { Inbox, Plus } from "lucide-react-native";
 import { useMemo } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -26,10 +25,17 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme ?? "light"];
 
   // すべてのTODO（親のみ）を取得
-  const { data: allTodos = [], isLoading, refetch: refetchTodos } = useTodos({ hasParent: false });
+  const {
+    data: allTodos = [],
+    isLoading,
+    refetch: refetchTodos,
+  } = useTodos({ hasParent: false });
 
   // 統計情報を取得
-  const { data: stats = { total: 0, completed: 0, pending: 0, completionRate: 0 }, refetch: refetchStats } = useTodoStats();
+  const {
+    data: stats = { total: 0, completed: 0, pending: 0, completionRate: 0 },
+    refetch: refetchStats,
+  } = useTodoStats();
 
   // ステータスをトグルするミューテーション
   const toggleStatusMutation = useToggleTodoStatus();
@@ -91,19 +97,19 @@ export default function HomeScreen() {
     await Promise.all([refetchTodos(), refetchStats()]);
   };
 
+  const headerHeight = useHeaderHeight();
+
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        contentInset={{
+          top: headerHeight
+        }}
         refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={handleRefresh}
-          />
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
       >
         {/* ヘッダー */}
@@ -237,21 +243,18 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* FAB - TODO追加ボタン（Glass Effect） */}
-      <GlassView
-        style={styles.fab}
-        glassEffectStyle="regular"
-      >
+      <GlassView style={styles.fab} glassEffectStyle="regular">
         <TouchableOpacity
           style={styles.fabButton}
           onPress={() => router.push("/todo/new" as any)}
           activeOpacity={0.8}
         >
-          <Plus size={24} color={colorScheme === 'dark' ? 'white' : colors.tint} />
+          <Plus
+            size={24}
+            color={colorScheme === "dark" ? "white" : colors.tint}
+          />
         </TouchableOpacity>
       </GlassView>
-
-      {/* 開発ツール */}
-      {__DEV__ && <DevTools />}
     </SafeAreaView>
   );
 }

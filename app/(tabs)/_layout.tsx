@@ -11,7 +11,7 @@ import { Platform } from "react-native";
 export default function TabLayout() {
   return (
     <NativeTabs minimizeBehavior="onScrollDown">
-      <NativeTabs.Trigger name="index">
+      <NativeTabs.Trigger name="home">
         <Label>ホーム</Label>
         {Platform.select({
           ios: <Icon sf={{ default: "house", selected: "house.fill" }} />,
