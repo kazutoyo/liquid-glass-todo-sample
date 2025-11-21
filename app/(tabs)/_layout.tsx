@@ -1,9 +1,10 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
+  Badge,
   Icon,
   Label,
   NativeTabs,
-  VectorIcon,
+  VectorIcon
 } from "expo-router/unstable-native-tabs";
 import React from "react";
 import { Platform } from "react-native";
@@ -14,7 +15,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="home">
         <Label>ホーム</Label>
         {Platform.select({
-          ios: <Icon sf={{ default: "house", selected: "house.fill" }} />,
           android: (
             <Icon src={<VectorIcon family={FontAwesome} name="home" />} />
           ),
@@ -25,9 +25,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="todos">
         <Label>TODO一覧</Label>
         {Platform.select({
-          ios: (
-            <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
-          ),
           android: (
             <Icon src={<VectorIcon family={FontAwesome} name="list" />} />
           ),
@@ -38,11 +35,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="search" role="search">
         <Label>検索</Label>
         {Platform.select({
-          ios: (
-            <Icon
-              sf={{ default: 'magnifyingglass', selected: "magnifyingglass" }}
-            />
-          ),
           android: (
             <Icon src={<VectorIcon family={FontAwesome} name="search" />} />
           ),
@@ -53,12 +45,12 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="settings">
         <Label>設定</Label>
         {Platform.select({
-          ios: <Icon sf={{ default: "gear", selected: "gear" }} />,
           android: (
             <Icon src={<VectorIcon family={FontAwesome} name="cog" />} />
           ),
           default: <Icon sf="gear" />,
         })}
+        <Badge>9+</Badge>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

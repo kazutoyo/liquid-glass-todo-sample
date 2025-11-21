@@ -1,0 +1,18 @@
+diff --git a/build/native-tabs/NativeBottomTabs/NativeTabsView.js b/build/native-tabs/NativeBottomTabs/NativeTabsView.js
+index 9feb57f6fcd4971f2b8d3ca21bf589f83c7ce1aa..a9ae0e5a3f7839abb45a16c1bd1693e3d42850ae 100644
+--- a/build/native-tabs/NativeBottomTabs/NativeTabsView.js
++++ b/build/native-tabs/NativeBottomTabs/NativeTabsView.js
+@@ -153,7 +153,12 @@ function convertOptionsIconToPropsIcon(icon) {
+         return undefined;
+     }
+     if ('sf' in icon && icon.sf) {
+-        return { sfSymbolName: icon.sf };
++        return {
++            ios: {
++                type: 'sfSymbol',
++                name: icon.sf
++            }
++        };
+     }
+     else if ('src' in icon && icon.src) {
+         return { templateSource: icon.src };
