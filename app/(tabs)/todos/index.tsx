@@ -4,9 +4,8 @@ import Colors from "@/constants/Colors";
 import { useTodos, useToggleTodoStatus } from "@/hooks/use-todos";
 import type { Todo, TodoPriority } from "@/types/todo";
 import { Stack, useRouter } from "expo-router";
-import { Plus } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { Platform, StyleSheet, TouchableOpacity } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type FilterType = "all" | "pending" | "in_progress" | "completed";
@@ -179,15 +178,6 @@ export default function TodosScreen() {
           onTodoPress={handleTodoPress}
           onToggleStatus={handleToggleStatus}
         />
-
-        {/* FAB - TODO追加ボタン */}
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.tint }]}
-          onPress={() => router.push("/todo/new" as any)}
-          activeOpacity={0.8}
-        >
-          <Plus size={24} color="white" />
-        </TouchableOpacity>
       </SafeAreaView>
     </>
   );
