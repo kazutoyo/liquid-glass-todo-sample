@@ -2,8 +2,8 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { TodoCard } from "@/components/TodoCard";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useTodos, useTodoStats, useToggleTodoStatus } from "@/hooks/use-todos";
-import type { Todo } from "@/types/todo";
+import { useTodos, useTodoStats, useToggleTodoStatus, useUpdateTodo } from "@/hooks/use-todos";
+import type { Todo, TodoStatus } from "@/types/todo";
 import { useHeaderHeight } from '@react-navigation/elements';
 import { GlassView } from "expo-glass-effect";
 import { useRouter } from "expo-router";
@@ -39,6 +39,9 @@ export default function HomeScreen() {
 
   // ステータスをトグルするミューテーション
   const toggleStatusMutation = useToggleTodoStatus();
+
+  // ステータスを更新するミューテーション
+  const updateTodoMutation = useUpdateTodo();
 
   // 期限が近いTODO（未完了、7日以内）
   const dueSoonTodos = useMemo(() => {
@@ -90,6 +93,13 @@ export default function HomeScreen() {
 
   const handleToggleStatus = (todo: Todo) => {
     toggleStatusMutation.mutate(todo.id);
+  };
+
+  const handleStatusChange = (todo: Todo, status: TodoStatus) => {
+    updateTodoMutation.mutate({
+      id: todo.id,
+      status,
+    });
   };
 
   // リフレッシュ処理
@@ -180,6 +190,7 @@ export default function HomeScreen() {
                   todo={todo}
                   onPress={() => handleTodoPress(todo)}
                   onToggleStatus={() => handleToggleStatus(todo)}
+                  onStatusChange={(status) => handleStatusChange(todo, status)}
                 />
               ))}
             </View>
@@ -201,6 +212,7 @@ export default function HomeScreen() {
                   todo={todo}
                   onPress={() => handleTodoPress(todo)}
                   onToggleStatus={() => handleToggleStatus(todo)}
+                  onStatusChange={(status) => handleStatusChange(todo, status)}
                 />
               ))}
             </View>
@@ -222,6 +234,7 @@ export default function HomeScreen() {
                   todo={todo}
                   onPress={() => handleTodoPress(todo)}
                   onToggleStatus={() => handleToggleStatus(todo)}
+                  onStatusChange={(status) => handleStatusChange(todo, status)}
                 />
               ))}
             </View>
@@ -306,6 +319,7 @@ const styles = StyleSheet.create({
   },
   todoContainer: {
     paddingHorizontal: 16,
+    gap: 16,
   },
   emptyContainer: {
     alignItems: "center",

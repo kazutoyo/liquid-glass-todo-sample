@@ -1,13 +1,15 @@
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text, Platform } from 'react-native';
 import { Circle, CircleDot, CheckCircle, Clock } from 'lucide-react-native';
-import type { Todo } from '@/types/todo';
+import type { Todo, TodoStatus } from '@/types/todo';
 import { useColorScheme } from './useColorScheme';
 import Colors from '@/constants/Colors';
+import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui';
 
 type TodoCardProps = {
   todo: Todo;
   onPress?: () => void;
   onToggleStatus?: () => void;
+  onStatusChange?: (status: TodoStatus) => void;
 };
 
 const PRIORITY_COLORS = {
@@ -22,7 +24,19 @@ const STATUS_ICON_COMPONENTS = {
   completed: CheckCircle,
 } as const;
 
-export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
+const STATUS_LABELS = {
+  pending: '未着手',
+  in_progress: '進行中',
+  completed: '完了',
+} as const;
+
+const STATUS_COLORS = {
+  pending: '#9E9E9E',
+  in_progress: '#2196F3',
+  completed: '#4CAF50',
+} as const;
+
+export function TodoCard({ todo, onPress, onToggleStatus, onStatusChange }: TodoCardProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -47,7 +61,7 @@ export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
     });
   };
 
-  return (
+  const cardContent = (
     <TouchableOpacity
       style={[
         styles.container,
@@ -106,6 +120,21 @@ export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
 
           {/* メタ情報 */}
           <View style={styles.meta}>
+            {/* ステータスバッジ */}
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: STATUS_COLORS[todo.status] + '30' },
+              ]}>
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: STATUS_COLORS[todo.status] },
+                ]}>
+                {STATUS_LABELS[todo.status]}
+              </Text>
+            </View>
+
             {/* 優先度バッジ */}
             <View
               style={[
@@ -158,6 +187,35 @@ export function TodoCard({ todo, onPress, onToggleStatus }: TodoCardProps) {
       </View>
     </TouchableOpacity>
   );
+
+  // iOSの場合、ContextMenuでラップ
+  if (Platform.OS === 'ios' && onStatusChange) {
+    return (
+      <Host matchContents>
+        <ContextMenu>
+          <ContextMenu.Items>
+            {(Object.keys(STATUS_LABELS) as TodoStatus[]).map((status) => (
+              <SwiftButton
+                key={status}
+                onPress={() => onStatusChange(status)}
+                systemImage={
+                  status === 'pending'
+                    ? 'circle'
+                    : status === 'in_progress'
+                      ? 'circle.dotted'
+                      : 'checkmark.circle.fill'
+                }>
+                {STATUS_LABELS[status]}
+              </SwiftButton>
+            ))}
+          </ContextMenu.Items>
+          <ContextMenu.Trigger>{cardContent}</ContextMenu.Trigger>
+        </ContextMenu>
+      </Host>
+    );
+  }
+
+  return cardContent;
 }
 
 const styles = StyleSheet.create({
@@ -198,6 +256,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   priorityBadge: {
     paddingHorizontal: 8,

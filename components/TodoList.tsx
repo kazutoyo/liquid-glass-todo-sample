@@ -1,8 +1,8 @@
-import { FlatList, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
-import type { Todo } from '@/types/todo';
+import Colors from '@/constants/Colors';
+import type { Todo, TodoStatus } from '@/types/todo';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { TodoCard } from './TodoCard';
 import { useColorScheme } from './useColorScheme';
-import Colors from '@/constants/Colors';
 
 type TodoListProps = {
   todos: Todo[];
@@ -10,6 +10,7 @@ type TodoListProps = {
   emptyMessage?: string;
   onTodoPress?: (todo: Todo) => void;
   onToggleStatus?: (todo: Todo) => void;
+  onStatusChange?: (todo: Todo, status: TodoStatus) => void;
 };
 
 export function TodoList({
@@ -18,6 +19,7 @@ export function TodoList({
   emptyMessage = 'TODOがありません',
   onTodoPress,
   onToggleStatus,
+  onStatusChange,
 }: TodoListProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -49,6 +51,7 @@ export function TodoList({
           todo={item}
           onPress={() => onTodoPress?.(item)}
           onToggleStatus={() => onToggleStatus?.(item)}
+          onStatusChange={(status) => onStatusChange?.(item, status)}
         />
       )}
       contentContainerStyle={styles.listContainer}
@@ -70,5 +73,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    gap: 16
   },
 });

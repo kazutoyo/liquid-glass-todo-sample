@@ -1,6 +1,7 @@
 import type {
   CreateCategoryInput,
   CreateTodoInput,
+  Todo,
   TodoFilter,
   TodoSort,
   UpdateCategoryInput,
@@ -217,7 +218,7 @@ export async function getTodos(filter?: TodoFilter, sort?: TodoSort) {
  */
 export async function searchTodos(searchTerm: string) {
   // FTS5クエリ
-  const result = await expoDb.getAllAsync<{ id: number }>(
+  const result = await expoDb.getAllAsync<Todo>(
     `
     SELECT todos.* FROM todos
     INNER JOIN todos_fts ON todos.id = todos_fts.rowid

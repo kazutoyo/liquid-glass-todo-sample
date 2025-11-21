@@ -12,11 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
 import { Search, X } from 'lucide-react-native';
-import { useSearchTodos, useToggleTodoStatus } from '@/hooks/use-todos';
+import { useSearchTodos, useToggleTodoStatus, useUpdateTodo } from '@/hooks/use-todos';
 import { TodoCard } from '@/components/TodoCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import type { Todo } from '@/types/todo';
+import type { Todo, TodoStatus } from '@/types/todo';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function SearchScreen() {
   const [searchText, setSearchText] = useState('');
   const { data: results = [], isLoading } = useSearchTodos(searchText.trim());
   const toggleStatusMutation = useToggleTodoStatus();
+  const updateTodoMutation = useUpdateTodo();
 
   const handleSearchTextChange = useCallback(
     (text: string) => {
@@ -44,6 +45,13 @@ export default function SearchScreen() {
 
   const handleToggleStatus = (todo: Todo) => {
     toggleStatusMutation.mutate(todo.id);
+  };
+
+  const handleStatusChange = (todo: Todo, status: TodoStatus) => {
+    updateTodoMutation.mutate({
+      id: todo.id,
+      status,
+    });
   };
 
   return (
@@ -124,6 +132,7 @@ export default function SearchScreen() {
                     todo={todo}
                     onPress={() => handleTodoPress(todo)}
                     onToggleStatus={() => handleToggleStatus(todo)}
+                    onStatusChange={(status) => handleStatusChange(todo, status)}
                   />
                 ))}
               </View>

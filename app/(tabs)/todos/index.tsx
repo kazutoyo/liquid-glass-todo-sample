@@ -1,8 +1,8 @@
 import { TodoList } from "@/components/TodoList";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useTodos, useToggleTodoStatus } from "@/hooks/use-todos";
-import type { Todo, TodoPriority } from "@/types/todo";
+import { useTodos, useToggleTodoStatus, useUpdateTodo } from "@/hooks/use-todos";
+import type { Todo, TodoPriority, TodoStatus } from "@/types/todo";
 import { Stack, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Platform, StyleSheet } from "react-native";
@@ -24,6 +24,9 @@ export default function TodosScreen() {
 
   // ステータスをトグルするミューテーション
   const toggleStatusMutation = useToggleTodoStatus();
+
+  // ステータスを更新するミューテーション
+  const updateTodoMutation = useUpdateTodo();
 
   // フィルタとソートを適用
   const filteredAndSortedTodos = useMemo(() => {
@@ -64,6 +67,13 @@ export default function TodosScreen() {
 
   const handleToggleStatus = (todo: Todo) => {
     toggleStatusMutation.mutate(todo.id);
+  };
+
+  const handleStatusChange = (todo: Todo, status: TodoStatus) => {
+    updateTodoMutation.mutate({
+      id: todo.id,
+      status,
+    });
   };
 
   return (
@@ -177,6 +187,7 @@ export default function TodosScreen() {
           }
           onTodoPress={handleTodoPress}
           onToggleStatus={handleToggleStatus}
+          onStatusChange={handleStatusChange}
         />
       </SafeAreaView>
     </>
