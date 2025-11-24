@@ -2,19 +2,24 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { TodoCard } from "@/components/TodoCard";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useTodos, useTodoStats, useToggleTodoStatus, useUpdateTodo } from "@/hooks/use-todos";
+import {
+  useTodos,
+  useTodoStats,
+  useToggleTodoStatus,
+  useUpdateTodo,
+} from "@/hooks/use-todos";
 import type { Todo, TodoStatus } from "@/types/todo";
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useHeaderHeight } from "@react-navigation/elements";
 import { GlassView } from "expo-glass-effect";
 import { useRouter } from "expo-router";
 import { Inbox, Plus } from "lucide-react-native";
 import { useMemo } from "react";
 import {
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -88,7 +93,7 @@ export default function HomeScreen() {
   }, [allTodos]);
 
   const handleTodoPress = (todo: Todo) => {
-    router.push(`/todo/${todo.id}` as any);
+    router.push(`/todo/${todo.id}`);
   };
 
   const handleToggleStatus = (todo: Todo) => {
@@ -110,13 +115,16 @@ export default function HomeScreen() {
   const headerHeight = useHeaderHeight();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["bottom"]}
+    >
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         contentInset={{
-          top: headerHeight
+          top: headerHeight,
         }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
@@ -203,7 +211,7 @@ export default function HomeScreen() {
             <SectionHeader
               title="期限が近いTODO"
               count={dueSoonTodos.length}
-              onSeeAll={() => router.push("/(tabs)/todos" as any)}
+              onSeeAll={() => router.push("/(tabs)/todos")}
             />
             <View style={styles.todoContainer}>
               {dueSoonTodos.map((todo) => (
@@ -225,7 +233,7 @@ export default function HomeScreen() {
             <SectionHeader
               title="最近追加したTODO"
               count={recentTodos.length}
-              onSeeAll={() => router.push("/(tabs)/todos" as any)}
+              onSeeAll={() => router.push("/(tabs)/todos")}
             />
             <View style={styles.todoContainer}>
               {recentTodos.map((todo) => (
@@ -256,18 +264,20 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* FAB - TODO追加ボタン（Glass Effect） */}
-      <GlassView style={styles.fab} glassEffectStyle="regular">
-        <TouchableOpacity
-          style={styles.fabButton}
-          onPress={() => router.push("/todo/new" as any)}
-          activeOpacity={0.8}
-        >
+      <Pressable
+        style={styles.fabButton}
+        onPress={() => {
+          router.push("/todo/new");
+        }}
+      >
+        <GlassView style={styles.fab} glassEffectStyle="regular">
           <Plus
             size={24}
             color={colorScheme === "dark" ? "white" : colors.tint}
+
           />
-        </TouchableOpacity>
-      </GlassView>
+        </GlassView>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -339,6 +349,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   fab: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    pointerEvents: "none",
+  },
+  fabButton: {
     position: "absolute",
     right: 20,
     bottom: 90, // TabBarの高さ(~50px) + マージン
@@ -354,11 +371,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-  },
-  fabButton: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

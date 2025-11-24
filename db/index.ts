@@ -193,7 +193,7 @@ export async function getTodos(filter?: TodoFilter, sort?: TodoSort) {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
+      query = query.where(and(...conditions));
     }
   }
 
@@ -201,13 +201,13 @@ export async function getTodos(filter?: TodoFilter, sort?: TodoSort) {
   if (sort) {
     const orderFn = sort.order === 'asc' ? asc : desc;
     const field = schema.todos[sort.field];
-    query = query.orderBy(orderFn(field)) as any;
+    query = query.orderBy(orderFn(field));
   } else {
     // デフォルトソート: sortOrder昇順、作成日時降順
     query = query.orderBy(
       asc(schema.todos.sortOrder),
       desc(schema.todos.createdAt)
-    ) as any;
+    );
   }
 
   return await query;

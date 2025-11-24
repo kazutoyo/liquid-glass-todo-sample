@@ -1,10 +1,10 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Folder, ChevronRight, Info, Database, Book, Github } from 'lucide-react-native';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryStats } from '@/hooks/use-categories';
+import { useRouter } from 'expo-router';
+import { Book, ChevronRight, Database, Folder, Info } from 'lucide-react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function SettingsScreen() {
               styles.settingItem,
               { backgroundColor: colors.text + '05', borderColor: colors.text + '20' },
             ]}
-            onPress={() => router.push('/categories' as any)}
+            onPress={() => router.push('/categories')}
             activeOpacity={0.7}>
             <View style={styles.settingItemLeft}>
               <Folder size={20} color={colors.tint} />
@@ -117,26 +117,12 @@ export default function SettingsScreen() {
               styles.settingItem,
               { backgroundColor: colors.text + '05', borderColor: colors.text + '20' },
             ]}
+            onPress={() => router.push('/glass-effect')}
             activeOpacity={0.7}>
             <View style={styles.settingItemLeft}>
               <Book size={20} color={colors.tint} />
               <Text style={[styles.settingItemText, { color: colors.text }]}>
-                使い方
-              </Text>
-            </View>
-            <ChevronRight size={16} color={colors.text + '60'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.settingItem,
-              { backgroundColor: colors.text + '05', borderColor: colors.text + '20' },
-            ]}
-            activeOpacity={0.7}>
-            <View style={styles.settingItemLeft}>
-              <Github size={20} color={colors.tint} />
-              <Text style={[styles.settingItemText, { color: colors.text }]}>
-                ソースコード
+                Glass Effect
               </Text>
             </View>
             <ChevronRight size={16} color={colors.text + '60'} />

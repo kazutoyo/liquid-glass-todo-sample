@@ -1,22 +1,22 @@
-import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
-import { useState, useCallback } from 'react';
-import { Search, X } from 'lucide-react-native';
-import { useSearchTodos, useToggleTodoStatus, useUpdateTodo } from '@/hooks/use-todos';
 import { TodoCard } from '@/components/TodoCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useSearchTodos, useToggleTodoStatus, useUpdateTodo } from '@/hooks/use-todos';
 import type { Todo, TodoStatus } from '@/types/todo';
+import { Stack, useRouter } from 'expo-router';
+import { Search, X } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function SearchScreen() {
   };
 
   const handleTodoPress = (todo: Todo) => {
-    router.push(`/todo/${todo.id}` as any);
+    router.push(`/todo/${todo.id}`);
   };
 
   const handleToggleStatus = (todo: Todo) => {

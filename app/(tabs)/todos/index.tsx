@@ -62,7 +62,7 @@ export default function TodosScreen() {
   }, [allTodos, filterType, sortType]);
 
   const handleTodoPress = (todo: Todo) => {
-    router.push(`/todo/${todo.id}` as any);
+    router.push(`/todo/${todo.id}`);
   };
 
   const handleToggleStatus = (todo: Todo) => {

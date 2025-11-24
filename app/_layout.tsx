@@ -100,7 +100,7 @@ function RootLayoutNav() {
       (response) => {
         const todoId = response.notification.request.content.data.todoId;
         if (todoId) {
-          router.push(`/todo/${todoId}` as any);
+          router.push(`/todo/${todoId}`);
         }
       }
     );
@@ -142,6 +142,7 @@ function RootLayoutNav() {
             },
           }}
         />
+        <Stack.Screen name="glass-effect" options={{ title: "Glass Effect" }} />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
