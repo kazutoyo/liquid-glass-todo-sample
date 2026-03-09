@@ -11,12 +11,10 @@ import {
 } from "@/hooks/use-todos";
 import type { Todo, TodoStatus } from "@/types/todo";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { GlassView } from "expo-glass-effect";
 import { useRouter } from "expo-router";
-import { Inbox, Plus } from "lucide-react-native";
+import { Inbox } from "lucide-react-native";
 import { useMemo } from "react";
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -258,26 +256,11 @@ export default function HomeScreen() {
               TODOがまだありません
             </Text>
             <Text style={[styles.emptySubText, { color: colors.text + "40" }]}>
-              右下の「+」ボタンから追加してみましょう
+              下のバーからサクッと追加してみましょう
             </Text>
           </View>
         )}
       </ScrollView>
-
-      {/* FAB - TODO追加ボタン（Glass Effect） */}
-      <Pressable
-        style={styles.fabButton}
-        onPress={() => {
-          router.push("/todo/new");
-        }}
-      >
-        <GlassView style={styles.fab} glassEffectStyle="regular">
-          <Plus
-            size={24}
-            color={colorScheme === "dark" ? "white" : colors.tint}
-          />
-        </GlassView>
-      </Pressable>
 
       {/* 開発ツール */}
       {/* {__DEV__ && <DevTools />} */}
@@ -293,7 +276,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 90, // FABとTabBarの高さ分の余白
+    paddingBottom: 100, // BottomAccessory + TabBarの高さ分の余白
   },
   header: {
     padding: 20,
@@ -350,29 +333,5 @@ const styles = StyleSheet.create({
   emptySubText: {
     fontSize: 14,
     textAlign: "center",
-  },
-  fab: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    pointerEvents: "none",
-  },
-  fabButton: {
-    position: "absolute",
-    right: 20,
-    bottom: 90, // TabBarの高さ(~50px) + マージン
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    overflow: "hidden", // Glass Effectの境界をクリップ
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
   },
 });
