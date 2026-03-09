@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "liquidglasstodoapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -22,7 +21,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.kazutoyo_tokai_tn.liquidglasstodoapp"
     },
@@ -45,16 +43,14 @@
         {
           "enableFTS": true
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
-      "typedRoutes": true
-    },
-    "notification": {
-      "icon": "./assets/images/notification-icon.png",
-      "color": "#007AFF",
-      "androidMode": "default",
-      "androidCollapsedTitle": "TODOリマインダー"
+      "typedRoutes": true,
+      "reactCompiler": true
     }
   }
 }

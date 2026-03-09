@@ -98,7 +98,7 @@ function RootLayoutNav() {
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const todoId = response.notification.request.content.data.todoId;
+        const todoId = response.notification.request.content.data?.todoId;
         if (todoId) {
           router.push(`/todo/${todoId}`);
         }
