@@ -8,9 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 技術スタック
 
-- **フレームワーク**: React 19.1 + React Native 0.81.5 + TypeScript 5.9
-- **開発プラットフォーム**: Expo SDK 54
-- **ルーティング**: Expo Router 6 (ファイルベースルーティング、Typed Routes有効)
+- **フレームワーク**: React 19.2 + React Native 0.83.2 + TypeScript 5.9
+- **開発プラットフォーム**: Expo SDK 55
+- **ルーティング**: Expo Router 55 (ファイルベースルーティング、Typed Routes有効)
 - **タブナビゲーション**: Native Tabs (iOS Liquid Glass対応、minimizeBehavior対応)
 - **ナビゲーション**: React Navigation 7
 - **データベース**: expo-sqlite (SQLite with FTS5)
@@ -40,6 +40,7 @@ bun run web         # Web開発サーバー起動
 **Typed Routes**: `experiments.typedRoutes: true`が有効なため、型安全なナビゲーションが可能です。
 
 **ルーティング規則:**
+
 - `(tabs)` - ルートグループ（URLに表示されない）
 - `+` プレフィックス - 特殊ファイル（not-found、htmlなど）
 - `_layout.tsx` - ネストルート用のレイアウトコンポーネント
@@ -47,7 +48,8 @@ bun run web         # Web開発サーバー起動
 
 ### React Native New Architecture
 
-`app.json`で`newArchEnabled: true`が設定されており、以下の機能が有効です：
+SDK 55ではNew Architectureがデフォルト有効です。以下の機能が使えます：
+
 - Fabric（新レンダラー）
 - TurboModules
 - Bridgeless Mode（将来的に）
@@ -64,15 +66,18 @@ bun run web         # Web開発サーバー起動
 ### 重要な設定
 
 **TypeScript:**
+
 - Strictモード有効
 - パスエイリアス: `@/*` → プロジェクトルート
 
 **Expo設定（app.json）:**
+
 - Android: Edge-to-edge有効、予測的バックジェスチャー無効
 - iOS: タブレットサポート有効
 - Web: Metroバンドラー、静的出力
 
 **React Native Reanimated:**
+
 - `import 'react-native-reanimated'`をルートレイアウトでインポート
 - UIスレッドで実行される高性能アニメーション
 - `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withSpring`を活用
@@ -81,7 +86,7 @@ bun run web         # Web開発サーバー起動
 
 ### React 19の新機能活用
 
-このプロジェクトはReact 19.1を使用しているため、以下の機能を活用できます：
+このプロジェクトはReact 19.2を使用しているため、以下の機能を活用できます：
 
 1. **refをpropsとして受け取れる** - `forwardRef`が不要
 2. **`use` API** - コンテキストやPromiseを条件付きで読み取り
@@ -98,6 +103,7 @@ bun run web         # Web開発サーバー起動
 ### プラットフォーム固有コード
 
 プラットフォーム別の実装が必要な場合は、ファイル拡張子で分岐：
+
 ```
 useColorScheme.ts      # React Native用（デフォルト）
 useColorScheme.web.ts  # Web用
@@ -110,7 +116,7 @@ React Nativeの`Platform.OS`でランタイム分岐も可能。
 TypeScriptの交差型を使用してネイティブコンポーネントのpropsを拡張：
 
 ```typescript
-export type TextProps = ThemeProps & DefaultText['props'];
+export type TextProps = ThemeProps & DefaultText["props"];
 ```
 
 ### ナビゲーション規約
@@ -118,7 +124,7 @@ export type TextProps = ThemeProps & DefaultText['props'];
 Expo Routerの`Link`コンポーネントまたは`useRouter`フックを使用：
 
 ```typescript
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter } from "expo-router";
 ```
 
 ### アイコン使用法
@@ -155,6 +161,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 ### フォント管理
 
 ルートレイアウト（`app/_layout.tsx`）で以下のフォントを読み込み：
+
 - SpaceMono-Regular.ttf
 - FontAwesome（`@expo/vector-icons`）
 
@@ -163,6 +170,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 ### スプラッシュスクリーン
 
 `expo-splash-screen`を使用して、アセット読み込み完了まで自動非表示を防止：
+
 ```typescript
 SplashScreen.preventAutoHideAsync();
 ```
@@ -175,6 +183,7 @@ SplashScreen.preventAutoHideAsync();
 ### VSCode設定
 
 プロジェクトの`.vscode/settings.json`で以下を自動実行：
+
 - 保存時にコード修正
 - インポート整理
 - メンバーソート
@@ -182,77 +191,46 @@ SplashScreen.preventAutoHideAsync();
 ### テスト
 
 現在、テストフレームワークはpackage.jsonに設定されていませんが、以下のテストファイルが存在します：
+
 - `components/__tests__/StyledText-test.js` (レガシーJavaScriptテスト)
 
 テストを追加する場合は、JestまたはVitestのセットアップを検討してください。
 
-## Expoドキュメントの検索方法
+## Expo ドキュメント参照ルール
 
-このプロジェクトでは`expo-agent-cli`を使用してExpoの最新ドキュメントを取得できます。
+### 重要：Expo公式ドキュメントの参照方法
 
-### 基本的な使い方
+Expo SDK / Expo Router などのドキュメントを参照する際は、
+**必ずMarkdown版のURLを使用すること**。
 
-```bash
-# 1. 情報を検索
-expo-agent-cli search <query>
+### URLの変換ルール
 
-# 2. ドキュメントを参照
-expo-agent-cli docs <path>
+通常のWebページのURLの末尾に `.md` を付けるか、
+末尾が `/` の場合は `index.md` を付ける。
 
-# 3. 検索して最初の結果のドキュメントを取得（推奨）
-expo-agent-cli search <query> | jq '.results[0].path' | xargs -I {} expo-agent-cli docs {}
-```
+| WebページURL | 使用すべきMarkdown URL |
+|---|---|
+| `https://docs.expo.dev/versions/latest/sdk/router/` | `https://docs.expo.dev/versions/latest/sdk/router/index.md` |
+| `https://docs.expo.dev/router/introduction/` | `https://docs.expo.dev/router/introduction/index.md` |
+| `https://docs.expo.dev/versions/latest/sdk/camera/` | `https://docs.expo.dev/versions/latest/sdk/camera/index.md` |
 
-### 使用例
-
-```bash
-# expo-routerについて調べる
-expo-agent-cli search expo-router | jq '.results[0].path' | xargs -I {} expo-agent-cli docs {}
-
-# expo-fontについて調べる
-expo-agent-cli search expo-font | jq '.results[0].path' | xargs -I {} expo-agent-cli docs {}
-
-# react-native-reanimatedについて調べる
-expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agent-cli docs {}
-```
-
-### 検索結果の形式
-
-`expo-agent-cli search`は以下のJSON形式で結果を返します:
-
-```json
-{
-  "query": "expo-router",
-  "total": 5,
-  "results": [
-    {
-      "title": "...",
-      "category": "...",
-      "url": "https://docs.expo.dev/...",
-      "path": "/versions/v54.0.0/..."
-    }
-  ]
-}
-```
-
-### 実装時のベストプラクティス
-
-新しいExpo機能を実装する前に:
-1. `expo-agent-cli search`で最新ドキュメントを検索
-2. バージョン54（このプロジェクトのExpoバージョン）のドキュメントを確認
-3. API、制限事項、プラットフォーム対応状況を確認
-4. サンプルコードを参考に実装
+### ルール
+- `docs.expo.dev` のURLを参照する場合は**常に** `.md` バージョンを使う
+- Web検索でExpoドキュメントのURLが見つかった場合も、アクセス前にURLを変換する
+- Markdown版は構造化されており、AIが正確に情報を読み取りやすい
 
 ## TODOアプリの機能
 
 ### データベース構造
 
 **SQLite + FTS5 (全文検索対応):**
+
 - `todos`: TODOテーブル（タイトル、説明、期限、優先度、ステータス、カテゴリ、タグ、繰り返し設定など）
 - `categories`: カテゴリテーブル（名前、色、アイコン、並び順）
 - `todos_fts`: FTS5仮想テーブル（タイトルと説明の全文検索）
 
 **型定義（types/todo.ts）:**
+
 - `Todo`: TODOアイテム（id, title, description, dueDate, priority, status, categoryId, tags, isRecurring, parentId, etc.）
 - `Category`: カテゴリ（id, name, color, icon, sortOrder）
 - `TodoPriority`: 優先度（low, medium, high）
@@ -261,6 +239,7 @@ expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agen
 ### データレイヤー
 
 **データベース操作（db/index.ts）:**
+
 - `initDatabase()`: データベース初期化、FTS5テーブルとトリガー作成
 - `createTodo()`, `updateTodo()`, `deleteTodo()`, `getTodos()`: TODO CRUD操作
 - `searchTodos()`: FTS5による全文検索
@@ -268,6 +247,7 @@ expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agen
 - `getTodoStats()`, `getCategoryStats()`: 統計情報取得
 
 **カスタムフック（hooks/）:**
+
 - `useTodos()`: TODO操作とリアルタイム更新
 - `useTodo()`: 単一TODO取得
 - `useSearchTodos()`: 全文検索
@@ -279,6 +259,7 @@ expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agen
 ### UIコンポーネント
 
 **基本コンポーネント（components/）:**
+
 - `TodoCard`: TODOカード（優先度、期限、ステータス表示）
 - `TodoList`: TODO一覧表示
 - `SectionHeader`: セクション見出し（カウント付き）
@@ -289,6 +270,7 @@ expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agen
 このアプリは**Expo Router 6のNative Tabs**を使用しています。
 
 **特徴:**
+
 - **iOS 26以降**: 自動的にLiquid Glassエフェクトが適用
 - **minimizeBehavior**: スクロール時にタブバーを最小化（`onScrollDown`）
 - **SF Symbols**: iOSではシステムアイコンを使用
@@ -296,32 +278,37 @@ expo-agent-cli search reanimated | jq '.results[0].path' | xargs -I {} expo-agen
 - **検索タブ**: `role="search"`で検索タブを分離
 - **DynamicColorIOS**: ライト/ダークモードに自動対応
 
-**実装（app/(tabs)/_layout.tsx）:**
+**実装（app/(tabs)/\_layout.tsx）:**
+
 ```tsx
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
-import { Platform, DynamicColorIOS } from 'react-native';
+import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
+import { Platform, DynamicColorIOS } from "react-native";
 
 <NativeTabs
   minimizeBehavior="onScrollDown"
   style={{
-    color: Platform.OS === 'ios'
-      ? DynamicColorIOS({ dark: 'white', light: 'black' })
-      : undefined,
-    tintColor: Platform.OS === 'ios'
-      ? DynamicColorIOS({ dark: 'white', light: '#007AFF' })
-      : '#007AFF',
-  }}>
+    color:
+      Platform.OS === "ios"
+        ? DynamicColorIOS({ dark: "white", light: "black" })
+        : undefined,
+    tintColor:
+      Platform.OS === "ios"
+        ? DynamicColorIOS({ dark: "white", light: "#007AFF" })
+        : "#007AFF",
+  }}
+>
   <NativeTabs.Trigger name="index">
     <Label>ホーム</Label>
-    <Icon sf={{ default: 'house', selected: 'house.fill' }} />
+    <Icon sf={{ default: "house", selected: "house.fill" }} />
   </NativeTabs.Trigger>
   {/* ... */}
-</NativeTabs>
+</NativeTabs>;
 ```
 
 ### 画面構成
 
 **タブナビゲーション（app/(tabs)/）:**
+
 - `index.tsx`: **ホーム画面**
   - 統計カード（全TODO、完了、未完了、達成率）
   - 今日のTODO
@@ -348,6 +335,7 @@ import { Platform, DynamicColorIOS } from 'react-native';
   - アプリ情報
 
 **その他の画面（app/）:**
+
 - `todo/[id].tsx`: **TODO詳細/編集画面**
   - TODO作成・編集フォーム
   - タイトル、説明、ステータス、優先度、カテゴリ、期限設定
@@ -362,11 +350,13 @@ import { Platform, DynamicColorIOS } from 'react-native';
 ### 開発用機能
 
 **ダミーデータ（utils/seed-data.ts）:**
+
 - `seedData()`: カテゴリとTODOのダミーデータを挿入
 - 4つのカテゴリ（仕事、個人、買い物、趣味）
 - 10件のサンプルTODO
 
 **DevTools（components/DevTools.tsx）:**
+
 - 開発モード（`__DEV__`）でのみ表示
 - ダミーデータ挿入ボタン
 - ホーム画面左下に表示
@@ -377,10 +367,10 @@ import { Platform, DynamicColorIOS } from 'react-native';
 // TODO作成
 const { create } = useTodos();
 await create({
-  title: '新しいタスク',
-  description: '詳細な説明',
-  priority: 'high',
-  status: 'pending',
+  title: "新しいタスク",
+  description: "詳細な説明",
+  priority: "high",
+  status: "pending",
   categoryId: 1,
   dueDate: new Date().toISOString(),
   // ...
@@ -388,14 +378,14 @@ await create({
 
 // 全文検索
 const { search, results } = useSearchTodos();
-await search('プロジェクト');
+await search("プロジェクト");
 
 // カテゴリ作成
 const { create } = useCategories();
 await create({
-  name: '仕事',
-  color: '#2196F3',
-  icon: 'briefcase',
+  name: "仕事",
+  color: "#2196F3",
+  icon: "briefcase",
   sortOrder: 0,
 });
 ```

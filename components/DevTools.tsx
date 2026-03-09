@@ -1,37 +1,40 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
-import { Wrench, X, Database } from 'lucide-react-native';
-import { seedData } from '@/utils/seed-data';
-import { useColorScheme } from './useColorScheme';
-import Colors from '@/constants/Colors';
+import Colors from "@/constants/Colors";
+import { seedData } from "@/utils/seed-data";
+import { Database, Wrench, X } from "lucide-react-native";
+import { useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useColorScheme } from "./useColorScheme";
 
 /**
  * 開発用ツール（本番環境では非表示にする）
  */
 export function DevTools() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSeedData = async () => {
     Alert.alert(
-      'ダミーデータ挿入',
-      'ダミーデータを挿入しますか？既存のデータは保持されます。',
+      "ダミーデータ挿入",
+      "ダミーデータを挿入しますか？既存のデータは保持されます。",
       [
-        { text: 'キャンセル', style: 'cancel' },
+        { text: "キャンセル", style: "cancel" },
         {
-          text: '挿入',
+          text: "挿入",
           onPress: async () => {
             try {
               await seedData();
-              Alert.alert('成功', 'ダミーデータを挿入しました。画面を更新してください。');
+              Alert.alert(
+                "成功",
+                "ダミーデータを挿入しました。画面を更新してください。",
+              );
             } catch (error) {
-              console.error('Failed to seed data:', error);
-              Alert.alert('エラー', 'ダミーデータの挿入に失敗しました');
+              console.error("Failed to seed data:", error);
+              Alert.alert("エラー", "ダミーデータの挿入に失敗しました");
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -40,15 +43,18 @@ export function DevTools() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.tint }]}
         onPress={() => setIsExpanded(true)}
-        activeOpacity={0.8}>
+        activeOpacity={0.8}
+      >
         <Wrench size={20} color="white" />
       </TouchableOpacity>
     );
   }
 
   return (
-    <View style={[styles.expandedContainer, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.text + '20' }]}>
+    <View
+      style={[styles.expandedContainer, { backgroundColor: colors.background }]}
+    >
+      <View style={[styles.header, { borderBottomColor: colors.text + "20" }]}>
         <Text style={[styles.title, { color: colors.text }]}>開発ツール</Text>
         <TouchableOpacity onPress={() => setIsExpanded(false)}>
           <X size={20} color={colors.text} />
@@ -59,7 +65,8 @@ export function DevTools() {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.tint }]}
           onPress={handleSeedData}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+        >
           <Database size={18} color="white" />
           <Text style={styles.buttonText}>ダミーデータ挿入</Text>
         </TouchableOpacity>
@@ -70,15 +77,15 @@ export function DevTools() {
 
 const styles = StyleSheet.create({
   fab: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
-    bottom: 20,
+    bottom: 120,
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -88,12 +95,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   expandedContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
     bottom: 20,
     width: 280,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -103,30 +110,30 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     padding: 16,
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     padding: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

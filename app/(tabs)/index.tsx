@@ -1,3 +1,4 @@
+// import { DevTools } from "@/components/DevTools";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TodoCard } from "@/components/TodoCard";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -27,7 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   // すべてのTODO（親のみ）を取得
   const {
@@ -274,10 +275,12 @@ export default function HomeScreen() {
           <Plus
             size={24}
             color={colorScheme === "dark" ? "white" : colors.tint}
-
           />
         </GlassView>
       </Pressable>
+
+      {/* 開発ツール */}
+      {/* {__DEV__ && <DevTools />} */}
     </SafeAreaView>
   );
 }

@@ -1,11 +1,15 @@
 import { TodoList } from "@/components/TodoList";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useTodos, useToggleTodoStatus, useUpdateTodo } from "@/hooks/use-todos";
+import {
+  useTodos,
+  useToggleTodoStatus,
+  useUpdateTodo,
+} from "@/hooks/use-todos";
 import type { Todo, TodoPriority, TodoStatus } from "@/types/todo";
 import { Stack, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type FilterType = "all" | "pending" | "in_progress" | "completed";
@@ -14,7 +18,7 @@ type SortType = "dueDate" | "priority" | "createdAt";
 export default function TodosScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortType, setSortType] = useState<SortType>("dueDate");
@@ -78,94 +82,60 @@ export default function TodosScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerTitle: "TODO一覧",
-          unstable_headerRightItems: () => [
-            {
-              type: "menu",
-              label: "Options",
-              icon: Platform.select({
-                ios: {
-                  type: "sfSymbol",
-                  name: "ellipsis.circle",
-                },
-                default: {
-                  type: "sfSymbol",
-                  name: "ellipsis.circle",
-                },
-              }),
-              menu: {
-                title: "オプション",
-                items: [
-                  {
-                    type: "submenu",
-                    label: "フィルター",
-                    icon: {
-                      type: "sfSymbol",
-                      name: "line.3.horizontal.decrease.circle",
-                    },
-                    items: [
-                      {
-                        type: "action",
-                        label: "すべて",
-                        state: filterType === "all" ? "on" : "off",
-                        onPress: () => setFilterType("all"),
-                      },
-                      {
-                        type: "action",
-                        label: "未着手",
-                        state: filterType === "pending" ? "on" : "off",
-                        onPress: () => setFilterType("pending"),
-                      },
-                      {
-                        type: "action",
-                        label: "進行中",
-                        state: filterType === "in_progress" ? "on" : "off",
-                        onPress: () => setFilterType("in_progress"),
-                      },
-                      {
-                        type: "action",
-                        label: "完了",
-                        state: filterType === "completed" ? "on" : "off",
-                        onPress: () => setFilterType("completed"),
-                      },
-                    ],
-                  },
-                  {
-                    type: "submenu",
-                    label: "並べ替え",
-                    icon: {
-                      type: "sfSymbol",
-                      name: "arrow.up.arrow.down",
-                    },
-                    items: [
-                      {
-                        type: "action",
-                        label: "期限順",
-                        state: sortType === "dueDate" ? "on" : "off",
-                        onPress: () => setSortType("dueDate"),
-                      },
-                      {
-                        type: "action",
-                        label: "優先度順",
-                        state: sortType === "priority" ? "on" : "off",
-                        onPress: () => setSortType("priority"),
-                      },
-                      {
-                        type: "action",
-                        label: "作成日順",
-                        state: sortType === "createdAt" ? "on" : "off",
-                        onPress: () => setSortType("createdAt"),
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          ],
-        }}
-      />
+      <Stack.Screen options={{ headerTitle: "TODO一覧" }} />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Menu icon="ellipsis.circle" title="オプション">
+          <Stack.Toolbar.Menu
+            icon="line.3.horizontal.decrease.circle"
+            title="フィルター"
+          >
+            <Stack.Toolbar.MenuAction
+              isOn={filterType === "all"}
+              onPress={() => setFilterType("all")}
+            >
+              すべて
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              isOn={filterType === "pending"}
+              onPress={() => setFilterType("pending")}
+            >
+              未着手
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              isOn={filterType === "in_progress"}
+              onPress={() => setFilterType("in_progress")}
+            >
+              進行中
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              isOn={filterType === "completed"}
+              onPress={() => setFilterType("completed")}
+            >
+              完了
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+          <Stack.Toolbar.Menu icon="arrow.up.arrow.down" title="並べ替え">
+            <Stack.Toolbar.MenuAction
+              isOn={sortType === "dueDate"}
+              onPress={() => setSortType("dueDate")}
+            >
+              期限順
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              isOn={sortType === "priority"}
+              onPress={() => setSortType("priority")}
+            >
+              優先度順
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              isOn={sortType === "createdAt"}
+              onPress={() => setSortType("createdAt")}
+            >
+              作成日順
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+        </Stack.Toolbar.Menu>
+      </Stack.Toolbar>
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
         edges={["bottom"]}
@@ -181,8 +151,8 @@ export default function TodosScreen() {
                   filterType === "pending"
                     ? "未着手"
                     : filterType === "in_progress"
-                    ? "進行中"
-                    : "完了"
+                      ? "進行中"
+                      : "完了"
                 }のTODOがありません`
           }
           onTodoPress={handleTodoPress}

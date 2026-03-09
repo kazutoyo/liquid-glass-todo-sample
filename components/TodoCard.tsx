@@ -198,15 +198,15 @@ export function TodoCard({ todo, onPress, onToggleStatus, onStatusChange }: Todo
               <SwiftButton
                 key={status}
                 onPress={() => onStatusChange(status)}
+                label={STATUS_LABELS[status]}
                 systemImage={
                   status === 'pending'
                     ? 'circle'
                     : status === 'in_progress'
                       ? 'circle.dotted'
                       : 'checkmark.circle.fill'
-                }>
-                {STATUS_LABELS[status]}
-              </SwiftButton>
+                }
+              />
             ))}
           </ContextMenu.Items>
           <ContextMenu.Trigger>{cardContent}</ContextMenu.Trigger>
